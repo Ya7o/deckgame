@@ -1,73 +1,82 @@
-# React + TypeScript + Vite
+# Deckgame V0 — Star Realms Core Set Prototype
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Pass-and-play deckbuilder prototype based on Star Realms Core Set rules. Local web app, no backend, no online.
 
-Currently, two official plugins are available:
+**Play online:** https://Ya7o.github.io/deckgame/
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Stack
 
-## React Compiler
+| Tool | Version |
+|---|---|
+| React | 19 |
+| TypeScript | 5 |
+| Vite | 8 |
+| Vitest | 4 |
+| ESLint | 9 |
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Installation
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm ci
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Commands
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+| Command | Description |
+|---|---|
+| `npm run dev` | Start dev server (hot reload) |
+| `npm run check` | Lint + tests + build (CI gate) |
+| `npm run lint` | ESLint only |
+| `npm test` | Vitest unit tests |
+| `npm run build` | Production build to `dist/` |
+| `npm run preview` | Serve the production build locally |
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Project structure
+
+```
+deckgame/
+├── src/
+│   ├── data/
+│   │   └── cards.ts          # 50 card definitions, Core Set
+│   ├── game/
+│   │   ├── types.ts          # All TypeScript types
+│   │   ├── engine.ts         # 10 public game actions
+│   │   ├── effects.ts        # Effect applicators, ally logic
+│   │   ├── choices.ts        # Pending choice resolution
+│   │   ├── draw.ts           # Draw logic
+│   │   ├── utils.ts          # Card movement helpers
+│   │   └── validators.ts     # State invariant checks
+│   ├── ui/                   # React components
+│   └── tests/
+│       └── engine.test.ts    # 69 unit tests
+├── vite.config.ts            # base: '/deckgame/' for GitHub Pages
+└── package.json
+```
+
+## CI / Deployment
+
+Every push to `master` triggers the GitHub Actions workflow:
+1. `npm ci`
+2. `npm run check` — lint + tests + build (deploy blocked if any fail)
+3. Upload `dist/` and deploy to GitHub Pages
+
+## Known limits (V0 scope)
+
+- **Pass-and-play only** — two players share one screen, no networking
+- **No persistent state** — game resets on page refresh
+- **Stealth Needle ally effects**: copied faction unlocks ally effects correctly; ally *effects of the copied ship* are not re-copied (correct per Star Realms rules)
+- **Scrap effects**: not shown as interactive choices yet (passive only)
+- **Mobile layout**: not optimised
+
+## Test workflow
+
+```bash
+npm run check   # must pass before committing
+```
+
+State invariants can be checked programmatically:
+
+```typescript
+import { validateStateInvariants } from "./src/game/validators";
+const errors = validateStateInvariants(state); // [] = valid
 ```

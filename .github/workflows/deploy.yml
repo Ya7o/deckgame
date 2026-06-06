@@ -29,8 +29,8 @@ jobs:
         run: npm ci
         working-directory: deckgame
 
-      - name: Build
-        run: npm run build
+      - name: Check (lint + test + build)
+        run: npm run check
         working-directory: deckgame
 
       - uses: actions/upload-pages-artifact@v3
