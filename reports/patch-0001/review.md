@@ -26,4 +26,4 @@ Créer une commande `npm run check` fiable et corriger les 8 erreurs ESLint sans
 - Les bugs moteur signalés dans les patchs suivants (double activation Bases, validation Combat, etc.) ne sont pas encore corrigés.
 
 ## Hash du commit
-À compléter après commit.
+`82b668e`
