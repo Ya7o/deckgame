@@ -329,6 +329,78 @@ describe("base activation", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Combat — validation stricte (PATCH 0003)
+// ---------------------------------------------------------------------------
+
+describe("combat strict validation", () => {
+  function withCombat(n: number) {
+    const s = setupGame();
+    return { ...s, players: { ...s.players, player_1: { ...s.players.player_1, currentCombat: n } } };
+  }
+
+  it("attack with amount 0 is rejected", () => {
+    const r = attackOpponent(withCombat(5), "player_1", 0);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toBe("invalid_amount");
+    // State must be unchanged
+    if (!r.ok) expect(r.state.players.player_2.authority).toBe(50);
+  });
+
+  it("attack with negative amount is rejected", () => {
+    const r = attackOpponent(withCombat(5), "player_1", -3);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toBe("invalid_amount");
+    if (!r.ok) expect(r.state.players.player_2.authority).toBe(50);
+  });
+
+  it("attack with non-integer amount is rejected", () => {
+    const r = attackOpponent(withCombat(5), "player_1", 2.5);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toBe("invalid_amount");
+    if (!r.ok) expect(r.state.players.player_2.authority).toBe(50);
+  });
+
+  it("attack with amount greater than currentCombat is rejected", () => {
+    const r = attackOpponent(withCombat(3), "player_1", 10);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toBe("insufficient_combat");
+    if (!r.ok) expect(r.state.players.player_2.authority).toBe(50);
+  });
+
+  it("attack blocked by outpost is rejected, state unchanged", () => {
+    let s = withCombat(10);
+    const outpost = mkInstance("battle_station", "player_2", "bases");
+    s = { ...s, players: { ...s.players, player_2: { ...s.players.player_2, bases: [outpost] } } };
+    const authorityBefore = s.players.player_2.authority;
+    const r = attackOpponent(s, "player_1", 5);
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.error).toBe("outpost_blocking");
+      expect(r.state.players.player_2.authority).toBe(authorityBefore);
+      expect(r.state.players.player_1.currentCombat).toBe(10);
+    }
+  });
+
+  it("valid attack reduces authority and combat", () => {
+    const s = withCombat(8);
+    const r = attackOpponent(s, "player_1", 6);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.state.players.player_2.authority).toBe(44);
+    expect(r.state.players.player_1.currentCombat).toBe(2);
+  });
+
+  it("lethal attack triggers game_over", () => {
+    const s = withCombat(50);
+    const r = attackOpponent(s, "player_1", 50);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.state.phase).toBe("game_over");
+    expect(r.state.winner).toBe("player_1");
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Combat
 // ---------------------------------------------------------------------------
 

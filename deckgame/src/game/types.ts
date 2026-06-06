@@ -196,7 +196,8 @@ export type EngineError =
   | "invalid_target"
   | "game_already_over"
   | "base_not_found"
-  | "no_ships_to_copy";
+  | "no_ships_to_copy"
+  | "invalid_amount";
 
 export type EngineResult =
   | { ok: true; state: GameState }

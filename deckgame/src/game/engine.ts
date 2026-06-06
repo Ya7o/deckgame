@@ -409,6 +409,9 @@ export function attackOpponent(
   const e = guardTurn(state, playerId) ?? guardNoPending(state, playerId);
   if (e) return err(state, e);
 
+  // Validate amount: must be a positive integer
+  if (!Number.isInteger(amount) || amount <= 0) return err(state, "invalid_amount");
+
   const opponentId = state.opponentPlayerId;
   const opponent = state.players[opponentId];
 
@@ -419,7 +422,7 @@ export function attackOpponent(
   if (hasOutpost) return err(state, "outpost_blocking");
 
   const player = state.players[playerId];
-  if (player.currentCombat < amount) return err(state, "insufficient_combat");
+  if (amount > player.currentCombat) return err(state, "insufficient_combat");
 
   let s = state;
   s = {
