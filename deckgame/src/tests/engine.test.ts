@@ -16,6 +16,7 @@ import { getCardDef } from "../data/cards";
 import { mkInstance } from "../game/utils";
 import type { ChoicePayload } from "../game/choices";
 import type { PendingChoice } from "../game/types";
+import { validateStateInvariants } from "../game/validators";
 
 // ---------------------------------------------------------------------------
 // Setup
@@ -798,5 +799,94 @@ describe("resolveChoice validation (PATCH 0004)", () => {
     const r = resolvePendingChoice(sw, "player_1", "c7", { type: "skip" });
     expect(r.ok).toBe(true);
     expect(r.state.pendingChoices).toHaveLength(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// PATCH 0005 — validateStateInvariants
+// ---------------------------------------------------------------------------
+
+function assertValidState(state: import("../game/types").GameState) {
+  expect(validateStateInvariants(state)).toEqual([]);
+}
+
+describe("validateStateInvariants (PATCH 0005)", () => {
+  it("valid after setupGame", () => {
+    assertValidState(setupGame());
+  });
+
+  it("valid after playCard (ship)", () => {
+    const s = setupGame();
+    // Find a ship card in hand (Scouts or Vipers are ships)
+    const card = s.players.player_1.hand[0];
+    const r = playCard(s, "player_1", card.instanceId);
+    expect(r.ok).toBe(true);
+    if (r.ok) assertValidState(r.state);
+  });
+
+  it("valid after buyTradeRowCard", () => {
+    // Give player_1 enough trade to buy the cheapest trade row card
+    let s = setupGame();
+    s = { ...s, players: { ...s.players, player_1: { ...s.players.player_1, currentTrade: 10 } } };
+    const cheapest = s.tradeRow.reduce((a, b) => {
+      const da = getCardDef(a.definitionId); const db = getCardDef(b.definitionId);
+      return (da.cost ?? 999) <= (db.cost ?? 999) ? a : b;
+    });
+    const r = buyTradeRowCard(s, "player_1", cheapest.instanceId);
+    expect(r.ok).toBe(true);
+    if (r.ok) assertValidState(r.state);
+  });
+
+  it("valid after attackOpponent", () => {
+    let s = setupGame();
+    s = { ...s, players: { ...s.players, player_1: { ...s.players.player_1, currentCombat: 5 } } };
+    const r = attackOpponent(s, "player_1", 5);
+    expect(r.ok).toBe(true);
+    if (r.ok) assertValidState(r.state);
+  });
+
+  it("valid after endTurn", () => {
+    const s = setupGame();
+    const r = endTurn(s, "player_1");
+    expect(r.ok).toBe(true);
+    if (r.ok) assertValidState(r.state);
+  });
+
+  it("detects duplicate instanceId (card in two zones)", () => {
+    const s = setupGame();
+    const card = s.players.player_1.hand[0];
+    // Inject the same card instance into two zones
+    const corrupted = {
+      ...s,
+      players: {
+        ...s.players,
+        player_1: {
+          ...s.players.player_1,
+          discard: [...s.players.player_1.discard, card],
+        },
+      },
+    };
+    const errors = validateStateInvariants(corrupted);
+    expect(errors.some(e => e.includes("Duplicate instanceId"))).toBe(true);
+  });
+
+  it("detects negative currentTrade", () => {
+    const s = setupGame();
+    const corrupted = {
+      ...s,
+      players: {
+        ...s.players,
+        player_1: { ...s.players.player_1, currentTrade: -1 },
+      },
+    };
+    const errors = validateStateInvariants(corrupted);
+    expect(errors.some(e => e.includes("currentTrade is negative"))).toBe(true);
+  });
+
+  it("detects winner set without game_over phase", () => {
+    const s = setupGame();
+    const corrupted = { ...s, winner: "player_1" as const };
+    const errors = validateStateInvariants(corrupted);
+    expect(errors.some(e => e.includes("winner is set"))).toBe(true);
   });
 });
