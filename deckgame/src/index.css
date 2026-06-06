@@ -1,0 +1,75 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0e0e12;
+  --surface: #1a1a24;
+  --surface2: #252535;
+  --border: #333348;
+  --text: #e8e8f0;
+  --text-muted: #8888aa;
+  --accent: #5b8fff;
+  --danger: #ff5555;
+  --success: #55cc77;
+  --trade: #f0c040;
+  --combat: #ff6644;
+  --authority: #55cc77;
+  --blob: #66dd44;
+  --machine: #aabbff;
+  --empire: #cc88ff;
+  --federation: #ffcc44;
+  --unaligned: #999aaa;
+  --radius: 8px;
+  --card-w: 80px;
+  --card-h: 112px;
+}
+
+html, body { height: 100%; width: 100%; overflow: hidden; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+#root { height: 100%; display: flex; flex-direction: column; }
+
+button {
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  border-radius: var(--radius);
+  padding: 8px 14px;
+  font-size: 13px;
+  min-height: 40px;
+  transition: background 0.15s;
+}
+button:hover:not(:disabled) { background: #333350; }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.primary:hover:not(:disabled) { background: #4477ee; }
+button.danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+button.danger:hover:not(:disabled) { background: #dd3333; }
+button.selected { border-color: var(--accent); background: #1e2e5a; }
+button.warning { background: #aa5500; border-color: #cc7700; color: #fff; }
+
+.badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.badge-outpost { background: var(--danger); color: #fff; }
+.badge-base { background: #444466; color: var(--text); }
+.badge-ship { background: #335533; color: var(--text); }
+
+.faction-blob { color: var(--blob); }
+.faction-machine_cult { color: var(--machine); }
+.faction-star_empire { color: var(--empire); }
+.faction-trade_federation { color: var(--federation); }
+.faction-unaligned { color: var(--unaligned); }
