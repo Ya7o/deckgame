@@ -16,7 +16,7 @@ import { addLog, newId, findInstance } from "./utils";
 // Faction helpers
 // ---------------------------------------------------------------------------
 
-export function getEffectiveFactions(inst: CardInstance, _state: GameState): Faction[] {
+export function getEffectiveFactions(inst: CardInstance): Faction[] {
   const def = getCardDef(inst.definitionId);
   const factions: Faction[] = [def.faction];
   if (inst.temporaryFactions) factions.push(...inst.temporaryFactions);
@@ -42,7 +42,7 @@ export function hasAlly(cardInst: CardInstance, faction: Faction, state: GameSta
 
   return allInPlay.some((other) => {
     if (other.instanceId === cardInst.instanceId) return false;
-    const otherFactions = getEffectiveFactions(other, state);
+    const otherFactions = getEffectiveFactions(other);
     return otherFactions.includes(faction);
   });
 }
@@ -82,7 +82,7 @@ export function applyEffect(
       const blobCount = player.cardsPlayedThisTurn.filter((id) => {
         const inst = findInstance(id, s) ?? s.players[playerId].inPlay.find(c => c.instanceId === id) ?? s.players[playerId].bases.find(c => c.instanceId === id);
         if (!inst) return false;
-        return getEffectiveFactions(inst, s).includes("blob");
+        return getEffectiveFactions(inst).includes("blob");
       }).length;
       if (blobCount > 0) s = drawCards(s, playerId, blobCount);
       return addLog(s, playerId, `Drew ${blobCount} card(s) (Blob World).`);

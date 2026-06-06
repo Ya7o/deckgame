@@ -515,7 +515,7 @@ export function endTurn(state: GameState, playerId: PlayerId): EngineResult {
   const player = s.players[playerId];
 
   // Discard inPlay ships
-  let discard = [...player.discard];
+  const discard = [...player.discard];
   for (const card of player.inPlay) {
     discard.push({ ...card, currentZone: "discard" });
   }

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { GameState, PendingChoice, PlayerId } from "../game/types";
+import type { GameState, PendingChoice, PlayerId, Effect } from "../game/types";
 import type { ChoicePayload } from "../game/choices";
 import { CardView } from "./CardView";
 
@@ -57,7 +57,7 @@ function ChoiceResolver({ choice, state, onResolve }: {
           <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "8px" }}>
             {choice.options!.map((option, i) => (
               <button key={i} onClick={() => onResolve(choice.id, { type: "choose_one", optionIndex: i })}>
-                {option.map((e: any) => describeEffect(e)).join(", ")}
+                {option.map((e: Effect) => describeEffect(e)).join(", ")}
               </button>
             ))}
           </div>
@@ -195,7 +195,7 @@ function getCandidates(choice: PendingChoice, state: GameState) {
   return all.filter(c => ids.has(c.instanceId));
 }
 
-function describeEffect(e: any): string {
+function describeEffect(e: Effect): string {
   switch (e.type) {
     case "gain_trade": return `+${e.amount} Trade`;
     case "gain_combat": return `+${e.amount} Combat`;

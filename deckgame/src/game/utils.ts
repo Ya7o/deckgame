@@ -87,7 +87,7 @@ export function moveCard(
   toTop = false
 ): GameState {
   const updated: CardInstance = { ...card, currentZone: zone };
-  let s = removeFromZone(card.instanceId, state);
+  const s = removeFromZone(card.instanceId, state);
 
   const push = (arr: CardInstance[]) =>
     toTop ? [updated, ...arr] : [...arr, updated];

@@ -14,6 +14,7 @@ import {
 import { resolvePendingChoice } from "../game/engine";
 import { getCardDef } from "../data/cards";
 import { mkInstance } from "../game/utils";
+import type { ChoicePayload } from "../game/choices";
 
 // ---------------------------------------------------------------------------
 // Setup
@@ -482,7 +483,7 @@ describe("smoke test", () => {
       if (s.pendingChoices.length > 0) {
         const choice = s.pendingChoices.find(c => c.playerId === pid);
         if (choice) {
-          let payload: any;
+          let payload: ChoicePayload;
           if (choice.optional) {
             payload = { type: "skip" };
           } else if (choice.type === "choose_one") {
@@ -497,7 +498,7 @@ describe("smoke test", () => {
         const oppChoice = s.pendingChoices.find(c => c.playerId !== pid);
         if (oppChoice) {
           const oid = oppChoice.playerId;
-          let payload: any = { type: "select_cards", cardIds: oppChoice.candidateIds?.slice(0, oppChoice.amount ?? 1) ?? [] };
+          let payload: ChoicePayload = { type: "select_cards", cardIds: oppChoice.candidateIds?.slice(0, oppChoice.amount ?? 1) ?? [] };
           if (oppChoice.optional) payload = { type: "skip" };
           if (oppChoice.type === "choose_one") payload = { type: "choose_one", optionIndex: 0 };
           const r = resolvePendingChoice(s, oid, oppChoice.id, payload);

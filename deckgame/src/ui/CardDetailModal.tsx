@@ -1,4 +1,4 @@
-import type { CardInstance, GameState } from "../game/types";
+import type { CardInstance, GameState, Effect } from "../game/types";
 import { getCardDef } from "../data/cards";
 
 interface Props {
@@ -123,7 +123,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function describeEffect(e: any): string {
+function describeEffect(e: Effect): string {
   switch (e.type) {
     case "gain_trade": return `+${e.amount} Trade`;
     case "gain_combat": return `+${e.amount} Combat`;
