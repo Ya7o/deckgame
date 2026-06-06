@@ -19,6 +19,7 @@ import {
 } from "./effects";
 import { addLog, mkInstance, moveCard, newId, removeFromZone, shuffle } from "./utils";
 import { resolveChoice, type ChoicePayload } from "./choices";
+import { getCardNameFr } from "../i18n";
 
 // ---------------------------------------------------------------------------
 // Trade Row refill (exported for choices.ts)
@@ -135,7 +136,7 @@ export function setupGame(options: SetupOptions = {}): GameState {
   state = drawCards(state, "player_1", 3);
   state = drawCards(state, "player_2", 5);
 
-  state = addLog(state, null, "Game started.");
+  state = addLog(state, null, "Partie commencée.");
   return state;
 }
 
@@ -177,7 +178,7 @@ export function playCard(
     },
   };
 
-  s = addLog(s, playerId, `Played ${def.name}.`);
+  s = addLog(s, playerId, `Joue ${getCardNameFr(cardInst.definitionId)}.`);
 
   if (def.type === "ship") {
     // Fleet HQ trigger fires for ships entering play
@@ -235,7 +236,7 @@ export function activateBase(
     },
   };
 
-  s = addLog(s, playerId, `Activated ${def.name}.`);
+  s = addLog(s, playerId, `Active ${getCardNameFr(baseInst.definitionId)}.`);
 
   // Apply primary effects (excluding self_scrap and triggers which are set up at play time)
   const effects = def.primaryEffects.filter(
@@ -300,10 +301,10 @@ export function buyTradeRowCard(
     };
     // Consume the modifier
     s = { ...s, activeModifiers: s.activeModifiers.filter((m) => m.id !== topDeckMod!.id) };
-    s = addLog(s, playerId, `Bought ${def.name} → top of deck.`);
+    s = addLog(s, playerId, `Achète ${getCardNameFr(cardInst.definitionId)} → dessus de pioche.`);
   } else {
     s = moveCard(updated, "discard", s);
-    s = addLog(s, playerId, `Bought ${def.name}.`);
+    s = addLog(s, playerId, `Achète ${getCardNameFr(cardInst.definitionId)}.`);
   }
 
   s = refillTradeRow(s);
@@ -342,10 +343,10 @@ export function buyExplorer(state: GameState, playerId: PlayerId): EngineResult 
     s = removeFromZone(explorer.instanceId, s);
     s = { ...s, players: { ...s.players, [playerId]: { ...s.players[playerId], deck: [{ ...updated, currentZone: "deck" }, ...s.players[playerId].deck] } } };
     s = { ...s, activeModifiers: s.activeModifiers.filter((m) => m.id !== topDeckMod.id) };
-    s = addLog(s, playerId, `Bought Explorer → top of deck.`);
+    s = addLog(s, playerId, `Achète Explorateur → dessus de pioche.`);
   } else {
     s = moveCard(updated, "discard", s);
-    s = addLog(s, playerId, `Bought Explorer.`);
+    s = addLog(s, playerId, `Achète Explorateur.`);
   }
 
   return ok(s);
@@ -385,7 +386,7 @@ export function attackBase(
   };
 
   s = moveCard(baseInst, "discard", s);
-  s = addLog(s, playerId, `Destroyed ${def.name} (cost ${defense} Combat).`);
+  s = addLog(s, playerId, `Détruit ${getCardNameFr(baseInst.definitionId)} (coûte ${defense} Combat).`);
 
   // Remove triggers/modifiers from destroyed base
   s = {
@@ -434,12 +435,12 @@ export function attackOpponent(
     },
   };
 
-  s = addLog(s, playerId, `Attacked ${opponent.name} for ${amount} damage.`);
+  s = addLog(s, playerId, `Attaque ${opponent.name} pour ${amount} dégât(s).`);
 
   // Check game end
   if (s.players[opponentId].authority <= 0) {
     s = { ...s, phase: "game_over", winner: playerId, gameOverReason: "authority_depleted" };
-    s = addLog(s, null, `${s.players[playerId].name} wins!`);
+    s = addLog(s, null, `${s.players[playerId].name} gagne !`);
   }
 
   return ok(s);
@@ -471,7 +472,7 @@ export function activateSelfScrap(
   let s = state;
   // Move to scrap heap
   s = moveCard(cardInst, "scrap_heap", s);
-  s = addLog(s, playerId, `Self-scrapped ${def.name}.`);
+  s = addLog(s, playerId, `Écarte ${getCardNameFr(cardInst.definitionId)}.`);
 
   // Remove triggers/modifiers
   s = {
@@ -562,9 +563,9 @@ export function endTurn(state: GameState, playerId: PlayerId): EngineResult {
 
   // Draw new hand for current player (for their NEXT turn)
   s = drawCards(s, playerId, 5);
-  s = addLog(s, playerId, `Drew hand for next turn.`);
+  s = addLog(s, playerId, `Pioche pour le prochain tour.`);
 
-  s = addLog(s, playerId, `Ended turn.`);
+  s = addLog(s, playerId, `Fin du tour.`);
 
   // Switch to next player
   const nextPlayerId: PlayerId = playerId === "player_1" ? "player_2" : "player_1";
@@ -612,6 +613,6 @@ export function concedeGame(state: GameState, playerId: PlayerId): EngineResult 
   if (state.phase === "game_over") return err(state, "game_already_over");
   const winnerId: PlayerId = playerId === "player_1" ? "player_2" : "player_1";
   const s: GameState = { ...state, phase: "game_over", winner: winnerId, gameOverReason: "concede" };
-  const s2 = addLog(s, playerId, `${state.players[playerId].name} conceded.`);
+  const s2 = addLog(s, playerId, `${state.players[playerId].name} abandonne.`);
   return ok(s2);
 }

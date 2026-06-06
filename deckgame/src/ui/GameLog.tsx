@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { GameLogEntry } from "../game/types";
+import { fr } from "../i18n";
 
 interface Props {
   entries: GameLogEntry[];
@@ -38,11 +39,11 @@ export function GameLog({ entries, maxHeight = 120 }: Props) {
           }}
         >
           <span style={{ color: "var(--text-muted)", marginRight: "6px" }}>T{e.turn}</span>
-          {e.playerId && <span style={{ marginRight: "4px", opacity: 0.6 }}>[{e.playerId === "player_1" ? "P1" : "P2"}]</span>}
+          {e.playerId && <span style={{ marginRight: "4px", opacity: 0.6 }}>[{e.playerId === "player_1" ? "J1" : "J2"}]</span>}
           {e.message}
         </div>
       ))}
-      {entries.length === 0 && <div style={{ color: "var(--text-muted)" }}>No events yet.</div>}
+      {entries.length === 0 && <div style={{ color: "var(--text-muted)" }}>{fr.ui.noEvents}</div>}
     </div>
   );
 }

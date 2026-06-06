@@ -11,6 +11,7 @@ import type {
 import { getCardDef } from "../data/cards";
 import { drawCards } from "./draw";
 import { addLog, newId, findInstance } from "./utils";
+import { getCardNameFr } from "../i18n";
 
 // ---------------------------------------------------------------------------
 // Faction helpers
@@ -64,19 +65,19 @@ export function applyEffect(
   switch (effect.type) {
     case "gain_trade":
       s = { ...s, players: { ...s.players, [playerId]: { ...player, currentTrade: player.currentTrade + effect.amount } } };
-      return addLog(s, playerId, `Gained ${effect.amount} Trade.`);
+      return addLog(s, playerId, `+${effect.amount} Commerce.`);
 
     case "gain_combat":
       s = { ...s, players: { ...s.players, [playerId]: { ...player, currentCombat: player.currentCombat + effect.amount } } };
-      return addLog(s, playerId, `Gained ${effect.amount} Combat.`);
+      return addLog(s, playerId, `+${effect.amount} Combat.`);
 
     case "gain_authority":
       s = { ...s, players: { ...s.players, [playerId]: { ...player, authority: player.authority + effect.amount } } };
-      return addLog(s, playerId, `Gained ${effect.amount} Authority.`);
+      return addLog(s, playerId, `+${effect.amount} Autorité.`);
 
     case "draw":
       s = drawCards(s, playerId, effect.amount);
-      return addLog(s, playerId, `Drew ${effect.amount} card(s).`);
+      return addLog(s, playerId, `Pioche ${effect.amount} carte(s).`);
 
     case "draw_per_blob_played_this_turn": {
       const blobCount = player.cardsPlayedThisTurn.filter((id) => {
@@ -85,14 +86,14 @@ export function applyEffect(
         return getEffectiveFactions(inst).includes("blob");
       }).length;
       if (blobCount > 0) s = drawCards(s, playerId, blobCount);
-      return addLog(s, playerId, `Drew ${blobCount} card(s) (Blob World).`);
+      return addLog(s, playerId, `Pioche ${blobCount} carte(s) (Monde Blob).`);
     }
 
     case "draw_if_two_or_more_bases": {
       const basesCount = player.bases.length;
       if (basesCount >= 2) {
         s = drawCards(s, playerId, effect.amount);
-        return addLog(s, playerId, `Drew ${effect.amount} card(s) (Embassy Yacht).`);
+        return addLog(s, playerId, `Pioche ${effect.amount} carte(s) (Yacht de l'Ambassade).`);
       }
       return s;
     }
@@ -102,7 +103,7 @@ export function applyEffect(
       return s;
 
     case "opponent_discard": {
-      if (opponent.hand.length === 0) return addLog(s, playerId, `Opponent has no cards to discard.`);
+      if (opponent.hand.length === 0) return addLog(s, playerId, `L'adversaire n'a pas de cartes à défausser.`);
       const choice: PendingChoice = {
         id: newId("choice"),
         type: "opponent_discard",
@@ -113,7 +114,7 @@ export function applyEffect(
         candidateIds: opponent.hand.map((c) => c.instanceId),
       };
       s = { ...s, pendingChoices: [...s.pendingChoices, choice] };
-      return addLog(s, playerId, `Opponent must discard ${effect.amount} card(s).`);
+      return addLog(s, playerId, `L'adversaire doit défausser ${effect.amount} carte(s).`);
     }
 
     case "discard_up_to_then_draw_same": {
@@ -127,7 +128,7 @@ export function applyEffect(
         candidateIds: player.hand.map((c) => c.instanceId),
       };
       s = { ...s, pendingChoices: [...s.pendingChoices, choice] };
-      return addLog(s, playerId, `May discard up to ${effect.max} card(s) then draw that many.`);
+      return addLog(s, playerId, `Peut défausser jusqu'à ${effect.max} carte(s) et piocher autant.`);
     }
 
     case "scrap_from_hand_or_discard": {
@@ -143,7 +144,7 @@ export function applyEffect(
         candidateIds: candidates,
       };
       s = { ...s, pendingChoices: [...s.pendingChoices, choice] };
-      return addLog(s, playerId, `May scrap ${effect.amount} card(s) from hand/discard.`);
+      return addLog(s, playerId, `Peut écarter ${effect.amount} carte(s) de la main ou défausse.`);
     }
 
     case "scrap_from_hand": {
@@ -159,7 +160,7 @@ export function applyEffect(
         candidateIds: candidates,
       };
       s = { ...s, pendingChoices: [...s.pendingChoices, choice] };
-      return addLog(s, playerId, `May scrap ${effect.amount} card(s) from hand.`);
+      return addLog(s, playerId, `Peut écarter ${effect.amount} carte(s) de la main.`);
     }
 
     case "scrap_trade_row": {
@@ -174,13 +175,13 @@ export function applyEffect(
         candidateIds: s.tradeRow.map((c) => c.instanceId),
       };
       s = { ...s, pendingChoices: [...s.pendingChoices, choice] };
-      return addLog(s, playerId, `May scrap a Trade Row card.`);
+      return addLog(s, playerId, `Peut écarter une carte de la rangée commerciale.`);
     }
 
     case "destroy_target_base": {
       const opponentBases = opponent.bases;
       if (opponentBases.length === 0) {
-        return effect.optional ? s : addLog(s, playerId, `No opponent bases to destroy.`);
+        return effect.optional ? s : addLog(s, playerId, `L'adversaire n'a pas de bases à détruire.`);
       }
       const choice: PendingChoice = {
         id: newId("choice"),
@@ -191,7 +192,7 @@ export function applyEffect(
         candidateIds: opponentBases.map((c) => c.instanceId),
       };
       s = { ...s, pendingChoices: [...s.pendingChoices, choice] };
-      return addLog(s, playerId, `Choose an opponent base to destroy.`);
+      return addLog(s, playerId, `Choisissez une base adverse à détruire.`);
     }
 
     case "choose_one": {
@@ -204,7 +205,7 @@ export function applyEffect(
         options: effect.options,
       };
       s = { ...s, pendingChoices: [...s.pendingChoices, choice] };
-      return addLog(s, playerId, `Choose one of ${effect.options.length} options.`);
+      return addLog(s, playerId, `Choisissez parmi ${effect.options.length} effets.`);
     }
 
     case "self_scrap":
@@ -224,12 +225,12 @@ export function applyEffect(
         expiresEndOfTurn: true,
       };
       s = { ...s, activeModifiers: [...s.activeModifiers, mod] };
-      return addLog(s, playerId, `Next ship acquired goes to top of deck.`);
+      return addLog(s, playerId, `Prochain vaisseau acquis au dessus de la pioche.`);
     }
 
     case "acquire_ship_free_to_top_deck": {
       const ships = s.tradeRow.filter((c) => getCardDef(c.definitionId).type === "ship");
-      if (ships.length === 0) return addLog(s, playerId, `No ships in Trade Row to acquire.`);
+      if (ships.length === 0) return addLog(s, playerId, `Aucun vaisseau dans la rangée à acquérir.`);
       const choice: PendingChoice = {
         id: newId("choice"),
         type: "select_ship_to_acquire_free",
@@ -239,7 +240,7 @@ export function applyEffect(
         candidateIds: ships.map((c) => c.instanceId),
       };
       s = { ...s, pendingChoices: [...s.pendingChoices, choice] };
-      return addLog(s, playerId, `Acquire a ship from Trade Row for free.`);
+      return addLog(s, playerId, `Acquérez un vaisseau gratuitement.`);
     }
 
     case "copy_another_ship_played_this_turn": {
@@ -247,7 +248,7 @@ export function applyEffect(
         if (c.instanceId === sourceCardId) return false;
         return getCardDef(c.definitionId).type === "ship";
       });
-      if (ships.length === 0) return addLog(s, playerId, `No other ships played this turn to copy.`);
+      if (ships.length === 0) return addLog(s, playerId, `Aucun autre vaisseau joué ce tour à copier.`);
       const choice: PendingChoice = {
         id: newId("choice"),
         type: "select_ship_to_copy",
@@ -257,7 +258,7 @@ export function applyEffect(
         candidateIds: ships.map((c) => c.instanceId),
       };
       s = { ...s, pendingChoices: [...s.pendingChoices, choice] };
-      return addLog(s, playerId, `Choose a ship to copy.`);
+      return addLog(s, playerId, `Choisissez un vaisseau à copier.`);
     }
 
     case "trigger_on_play_ship_gain_combat": {
@@ -269,7 +270,7 @@ export function applyEffect(
         ownerId: playerId,
       };
       s = { ...s, activeTriggers: [...s.activeTriggers, trigger] };
-      return addLog(s, playerId, `Fleet HQ active: +${effect.amount} Combat per ship played.`);
+      return addLog(s, playerId, `QG de la Flotte actif : +${effect.amount} Combat par vaisseau joué.`);
     }
   }
 }
@@ -311,7 +312,7 @@ export function applyAvailableAllyEffects(
       },
     };
     s = applyEffects(s, playerId, allyEff.effects, cardInst.instanceId);
-    s = addLog(s, playerId, `Ally effect triggered for ${def.name}.`);
+    s = addLog(s, playerId, `Effet allié : ${getCardNameFr(cardInst.definitionId)}.`);
   }
 
   return s;

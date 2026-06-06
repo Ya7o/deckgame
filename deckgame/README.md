@@ -60,6 +60,11 @@ Every push to `master` triggers the GitHub Actions workflow:
 2. `npm run check` — lint + tests + build (deploy blocked if any fail)
 3. Upload `dist/` and deploy to GitHub Pages
 
+## Langue
+
+La V0 utilise le français comme langue d'affichage par défaut.
+Les identifiants techniques et les IDs de cartes restent en anglais pour préserver la stabilité du moteur et des tests.
+
 ## Known limits (V0 scope)
 
 - **Pass-and-play only** — two players share one screen, no networking

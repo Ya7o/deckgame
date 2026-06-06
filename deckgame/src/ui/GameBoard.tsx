@@ -18,6 +18,7 @@ import { CardDetailModal } from "./CardDetailModal";
 import { PendingChoicePanel } from "./PendingChoicePanel";
 import { GameLog } from "./GameLog";
 import { resolvePendingChoice } from "../game/engine";
+import { fr } from "../i18n";
 
 interface Props {
   initialState: GameState;
@@ -29,7 +30,6 @@ export function GameBoard({ initialState, onNewGame }: Props) {
   const [selected, setSelected] = useState<CardInstance | null>(null);
   const [showLog, setShowLog] = useState(false);
 
-  // In pass-and-play, viewer = current player
   const viewerId = state.currentPlayerId;
   const player = state.players[viewerId];
   const opponent = state.players[state.opponentPlayerId];
@@ -39,8 +39,7 @@ export function GameBoard({ initialState, onNewGame }: Props) {
       setState(result.state);
       setSelected(null);
     } else {
-      // Show error briefly (could toast in future)
-      console.warn("Engine error:", result.error);
+      console.warn("Erreur moteur :", result.error, "—", fr.errors[result.error] ?? result.error);
     }
   }
 
@@ -67,7 +66,7 @@ export function GameBoard({ initialState, onNewGame }: Props) {
       display: "flex", flexDirection: "column", height: "100%",
       background: "var(--bg)", overflow: "hidden",
     }}>
-      {/* OPPONENT AREA */}
+      {/* ZONE ADVERSE */}
       <div style={{
         padding: "8px",
         background: "var(--surface)",
@@ -79,16 +78,16 @@ export function GameBoard({ initialState, onNewGame }: Props) {
             <span style={{ fontWeight: "bold", fontSize: "13px" }}>{opponent.name}</span>
             <span style={{ marginLeft: "8px", color: "var(--authority)" }}>♥ {opponent.authority}</span>
             <span style={{ marginLeft: "8px", color: "var(--text-muted)", fontSize: "11px" }}>
-              Deck {opponent.deck.length} | Dis {opponent.discard.length} | Hand {opponent.hand.length}
+              {fr.ui.deck} {opponent.deck.length} | {fr.ui.discard} {opponent.discard.length} | {fr.ui.hand_short} {opponent.hand.length}
             </span>
           </div>
           {hasPendingForOpponent && (
             <span style={{ fontSize: "11px", color: "var(--trade)", background: "var(--surface2)", padding: "2px 6px", borderRadius: "4px" }}>
-              Waiting…
+              {fr.ui.waiting}
             </span>
           )}
         </div>
-        {/* Opponent bases */}
+        {/* Bases adverses */}
         {opponent.bases.length > 0 && (
           <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
             {opponent.bases.map((base) => {
@@ -109,7 +108,7 @@ export function GameBoard({ initialState, onNewGame }: Props) {
         )}
       </div>
 
-      {/* TRADE ROW */}
+      {/* RANGÉE COMMERCIALE */}
       <div style={{
         padding: "8px",
         borderBottom: "1px solid var(--border)",
@@ -117,7 +116,7 @@ export function GameBoard({ initialState, onNewGame }: Props) {
         background: "#12121a",
       }}>
         <div style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "4px" }}>
-          TRADE ROW — Trade Deck: {state.tradeDeck.length} | Explorer: {state.explorerPile.length}
+          {fr.ui.tradeRow} — {fr.ui.tradeDeck} : {state.tradeDeck.length} | {fr.ui.explorerPile} : {state.explorerPile.length}
         </div>
         <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "flex-start" }}>
           {state.tradeRow.map((card) => {
@@ -137,12 +136,12 @@ export function GameBoard({ initialState, onNewGame }: Props) {
                   <div style={{
                     position: "absolute", bottom: "2px", left: "50%", transform: "translateX(-50%)",
                     fontSize: "9px", background: "var(--trade)", color: "#000", padding: "0 4px", borderRadius: "3px",
-                  }}>BUY</div>
+                  }}>{fr.ui.buyBadge}</div>
                 )}
               </div>
             );
           })}
-          {/* Explorer */}
+          {/* Explorateur */}
           {state.explorerPile.length > 0 && (
             <div style={{ position: "relative" }}>
               <div style={{
@@ -159,7 +158,7 @@ export function GameBoard({ initialState, onNewGame }: Props) {
                 }}
               >
                 <div style={{ color: "var(--trade)", fontWeight: "bold" }}>2</div>
-                <div>Explorer</div>
+                <div>{fr.cardNames.explorer}</div>
                 <div style={{ color: "var(--text-muted)", fontSize: "9px" }}>×{state.explorerPile.length}</div>
               </div>
             </div>
@@ -167,7 +166,7 @@ export function GameBoard({ initialState, onNewGame }: Props) {
         </div>
       </div>
 
-      {/* IN PLAY AREA */}
+      {/* EN JEU */}
       <div style={{
         padding: "8px",
         borderBottom: "1px solid var(--border)",
@@ -176,7 +175,7 @@ export function GameBoard({ initialState, onNewGame }: Props) {
         background: "#0d0d14",
       }}>
         <div style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "4px" }}>
-          IN PLAY — Ships
+          {fr.ui.inPlay}
         </div>
         <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
           {player.inPlay.map((card) => {
@@ -226,7 +225,7 @@ export function GameBoard({ initialState, onNewGame }: Props) {
         </div>
       </div>
 
-      {/* RESOURCE BAR */}
+      {/* BARRE DE RESSOURCES */}
       <div style={{
         padding: "6px 12px",
         background: "var(--surface)",
@@ -240,10 +239,10 @@ export function GameBoard({ initialState, onNewGame }: Props) {
       }}>
         <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
           <span style={{ color: "var(--authority)", fontWeight: "bold" }}>♥ {player.authority}</span>
-          <span style={{ color: "var(--trade)", fontWeight: "bold" }}>T: {player.currentTrade}</span>
-          <span style={{ color: "var(--combat)", fontWeight: "bold" }}>C: {player.currentCombat}</span>
+          <span style={{ color: "var(--trade)", fontWeight: "bold" }}>{fr.resources.trade[0]} : {player.currentTrade}</span>
+          <span style={{ color: "var(--combat)", fontWeight: "bold" }}>⚔ : {player.currentCombat}</span>
           <span style={{ color: "var(--text-muted)", fontSize: "11px" }}>
-            Deck {player.deck.length} | Dis {player.discard.length}
+            {fr.ui.deck} {player.deck.length} | {fr.ui.discard} {player.discard.length}
           </span>
         </div>
         <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
@@ -257,26 +256,26 @@ export function GameBoard({ initialState, onNewGame }: Props) {
             onClick={() => setShowLog(!showLog)}
             style={{ minHeight: "32px", padding: "4px 8px", fontSize: "11px" }}
           >
-            Log
+            {fr.actions.log}
           </button>
           <button
             className="danger"
-            onClick={() => { if (confirm("Concede?")) dispatch(concedeGame(state, viewerId)); }}
+            onClick={() => { if (confirm(`${fr.actions.concede} ?`)) dispatch(concedeGame(state, viewerId)); }}
             style={{ minHeight: "32px", padding: "4px 8px", fontSize: "11px" }}
           >
-            Concede
+            {fr.actions.concede}
           </button>
           <button
             className="primary"
             disabled={hasPendingForMe}
             onClick={() => dispatch(endTurn(state, viewerId))}
           >
-            End Turn
+            {fr.actions.endTurn}
           </button>
         </div>
       </div>
 
-      {/* HAND */}
+      {/* MAIN */}
       <div style={{
         flex: 1,
         padding: "8px",
@@ -287,7 +286,7 @@ export function GameBoard({ initialState, onNewGame }: Props) {
         background: "var(--bg)",
       }}>
         <div style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "4px" }}>
-          HAND — {player.name} (Turn {state.turnNumber})
+          {fr.ui.hand} — {player.name} ({fr.ui.turn} {state.turnNumber})
         </div>
         <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
           {player.hand.map((card) => (
@@ -302,23 +301,23 @@ export function GameBoard({ initialState, onNewGame }: Props) {
           ))}
           {player.hand.length === 0 && (
             <div style={{ color: "var(--text-muted)", fontSize: "12px", padding: "16px 0" }}>
-              Hand empty — end turn to draw.
+              {fr.ui.handEmpty}
             </div>
           )}
         </div>
       </div>
 
-      {/* LOG DRAWER */}
+      {/* JOURNAL */}
       {showLog && (
         <div style={{ padding: "8px", borderTop: "1px solid var(--border)", flexShrink: 0 }}>
           <GameLog entries={state.log} />
         </div>
       )}
 
-      {/* PENDING CHOICES */}
+      {/* CHOIX EN ATTENTE */}
       <PendingChoicePanel state={state} viewerId={viewerId} onResolve={handleResolveChoice} />
 
-      {/* CARD DETAIL MODAL */}
+      {/* DÉTAIL DE CARTE */}
       {selected && (
         <CardDetailModal
           card={selected}
@@ -376,7 +375,7 @@ function AttackDirectButton({ combat, onAttack }: { combat: number; onAttack: (n
         onClick={() => onAttack(amount)}
         style={{ minHeight: "32px", padding: "4px 8px", fontSize: "11px" }}
       >
-        Attack
+        {fr.actions.attack}
       </button>
     </div>
   );
@@ -389,11 +388,13 @@ function GameOverScreen({ state, onNewGame }: { state: GameState; onNewGame: () 
       display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
       height: "100%", gap: "16px",
     }}>
-      <div style={{ fontSize: "32px", fontWeight: "bold" }}>GAME OVER</div>
-      {winner && <div style={{ color: "var(--success)", fontSize: "18px" }}>Winner: {winner.name}</div>}
-      <div style={{ color: "var(--text-muted)" }}>{state.gameOverReason === "concede" ? "by concession" : "by authority depletion"}</div>
+      <div style={{ fontSize: "32px", fontWeight: "bold" }}>{fr.ui.gameOver}</div>
+      {winner && <div style={{ color: "var(--success)", fontSize: "18px" }}>{fr.ui.winner} : {winner.name}</div>}
+      <div style={{ color: "var(--text-muted)" }}>
+        {state.gameOverReason === "concede" ? fr.ui.concessionReason : fr.ui.depletionReason}
+      </div>
       <div style={{ display: "flex", gap: "12px" }}>
-        <button className="primary" onClick={onNewGame}>New Game</button>
+        <button className="primary" onClick={onNewGame}>{fr.actions.newGame}</button>
       </div>
       <div style={{ maxWidth: "400px", width: "100%", padding: "0 16px" }}>
         <GameLog entries={state.log} maxHeight={200} />

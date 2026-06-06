@@ -1,5 +1,6 @@
-import type { CardInstance, GameState, Effect } from "../game/types";
+import type { CardInstance, GameState } from "../game/types";
 import { getCardDef } from "../data/cards";
+import { fr, getCardNameFr, renderEffectFr } from "../i18n";
 
 interface Props {
   card: CardInstance;
@@ -45,14 +46,14 @@ export function CardDetailModal({ card, state, onClose, onPlay, onBuy, onActivat
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
           <div>
-            <div style={{ fontWeight: "bold", fontSize: "16px" }}>{def.name}</div>
+            <div style={{ fontWeight: "bold", fontSize: "16px" }}>{getCardNameFr(def.id)}</div>
             <div style={{ display: "flex", gap: "8px", marginTop: "4px", fontSize: "12px", color: "var(--text-muted)" }}>
-              <span className={`faction-${def.faction}`}>{def.faction.replace("_", " ")}</span>
+              <span className={`faction-${def.faction}`}>{fr.factions[def.faction] ?? def.faction}</span>
               <span>•</span>
-              <span>{def.type}</span>
-              {def.cost !== null && <span>• Cost {def.cost}</span>}
-              {def.defense !== null && <span>• DEF {def.defense}</span>}
-              {def.isOutpost && <span style={{ color: "var(--danger)" }}>• OUTPOST</span>}
+              <span>{fr.cardTypes[def.type] ?? def.type}</span>
+              {def.cost !== null && <span>• {fr.ui.cost} {def.cost}</span>}
+              {def.defense !== null && <span>• {fr.ui.defense} {def.defense}</span>}
+              {def.isOutpost && <span style={{ color: "var(--danger)" }}>• {fr.ui.outpost}</span>}
             </div>
           </div>
           <button onClick={onClose} style={{ minHeight: "auto", padding: "4px 8px" }}>✕</button>
@@ -60,52 +61,53 @@ export function CardDetailModal({ card, state, onClose, onPlay, onBuy, onActivat
 
         {/* Effects */}
         {def.primaryEffects.length > 0 && (
-          <Section title="Primary">
-            {def.primaryEffects.map((e, i) => <div key={i} style={{ fontSize: "13px" }}>{describeEffect(e)}</div>)}
+          <Section title={fr.ui.primary}>
+            {def.primaryEffects.map((e, i) => <div key={i} style={{ fontSize: "13px" }}>{renderEffectFr(e)}</div>)}
           </Section>
         )}
         {def.allyEffects.length > 0 && (
-          <Section title={`Ally (${def.allyEffects[0].faction.replace("_", " ")})`}>
-            {def.allyEffects[0].effects.map((e, i) => <div key={i} style={{ fontSize: "13px" }}>{describeEffect(e)}</div>)}
+          <Section title={`${fr.ui.ally} (${fr.factions[def.allyEffects[0].faction] ?? def.allyEffects[0].faction})`}>
+            {def.allyEffects[0].effects.map((e, i) => <div key={i} style={{ fontSize: "13px" }}>{renderEffectFr(e)}</div>)}
           </Section>
         )}
         {def.scrapEffects.length > 0 && (
-          <Section title="Scrap">
-            {def.scrapEffects.map((e, i) => <div key={i} style={{ fontSize: "13px" }}>{describeEffect(e)}</div>)}
+          <Section title={fr.ui.scrap}>
+            {def.scrapEffects.map((e, i) => <div key={i} style={{ fontSize: "13px" }}>{renderEffectFr(e)}</div>)}
           </Section>
         )}
 
         {/* Zone */}
         <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "8px" }}>
-          Zone: {card.currentZone} {card.exhausted ? "• exhausted" : ""}
+          {fr.ui.zone} : {fr.zones[card.currentZone] ?? card.currentZone}
+          {card.exhausted ? ` • ${fr.ui.exhausted}` : ""}
         </div>
 
         {/* Actions */}
         <div style={{ display: "flex", gap: "8px", marginTop: "16px", flexWrap: "wrap" }}>
-          {onPlay && <button className="primary" onClick={onPlay}>Play</button>}
+          {onPlay && <button className="primary" onClick={onPlay}>{fr.actions.play}</button>}
           {onBuy && (
             <button
               className="primary"
               onClick={onBuy}
               disabled={def.cost !== null && player.currentTrade < def.cost}
             >
-              Buy ({def.cost} Trade)
+              {fr.actions.buy} ({def.cost} {fr.resources.trade})
             </button>
           )}
           {onActivate && (
             <button onClick={onActivate} disabled={card.exhausted}>
-              Activate
+              {fr.actions.activateBase}
             </button>
           )}
           {hasSelfScrap && onSelfScrap && (
-            <button className="warning" onClick={onSelfScrap}>Self-Scrap</button>
+            <button className="warning" onClick={onSelfScrap}>{fr.actions.selfScrap}</button>
           )}
           {canAttack && (
             <button className="danger" onClick={onAttackBase}>
-              Attack (DEF {def.defense})
+              {fr.actions.attackBase} ({fr.ui.defense} {def.defense})
             </button>
           )}
-          <button onClick={onClose}>Close</button>
+          <button onClick={onClose}>{fr.actions.close}</button>
         </div>
       </div>
     </div>
@@ -121,30 +123,4 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       </div>
     </div>
   );
-}
-
-function describeEffect(e: Effect): string {
-  switch (e.type) {
-    case "gain_trade": return `+${e.amount} Trade`;
-    case "gain_combat": return `+${e.amount} Combat`;
-    case "gain_authority": return `+${e.amount} Authority`;
-    case "draw": return `Draw ${e.amount}`;
-    case "draw_per_blob_played_this_turn": return `Draw 1 per Blob card played this turn`;
-    case "draw_per_card_scrapped_this_way": return `Draw 1 per card scrapped this way`;
-    case "draw_if_two_or_more_bases": return `Draw ${e.amount} if you have 2+ bases`;
-    case "opponent_discard": return `Opponent discards ${e.amount}`;
-    case "discard_up_to_then_draw_same": return `Discard up to ${e.max}, draw that many`;
-    case "scrap_from_hand_or_discard": return `Scrap ${e.amount} from hand/discard${e.optional ? " (optional)" : ""}`;
-    case "scrap_from_hand": return `Scrap ${e.amount} from hand${e.optional ? " (optional)" : ""}`;
-    case "scrap_trade_row": return `Scrap ${e.amount} from Trade Row${e.optional ? " (optional)" : ""}`;
-    case "destroy_target_base": return `Destroy target base${e.optional ? " (optional)" : ""}`;
-    case "choose_one": return `Choose one of ${e.options.length} options`;
-    case "self_scrap": return `Self-scrap → ${e.effects.map(describeEffect).join(", ")}`;
-    case "counts_as_ally_all_factions": return `Counts as ally for all factions`;
-    case "acquire_ship_free_to_top_deck": return `Acquire any ship free (top of deck)`;
-    case "next_ship_acquired_to_top_deck": return `Next ship acquired goes to top of deck`;
-    case "copy_another_ship_played_this_turn": return `Copy another ship played this turn`;
-    case "trigger_on_play_ship_gain_combat": return `Each ship played gains +${e.amount} Combat`;
-    default: return JSON.stringify(e);
-  }
 }

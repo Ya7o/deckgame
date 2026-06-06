@@ -2,6 +2,7 @@ import type { GameState, PlayerId, EngineResult, EngineError } from "./types";
 import { getCardDef } from "../data/cards";
 import { addLog, findInstance, moveCard, removeFromZone } from "./utils";
 import { applyEffects, reapplyAllAllyEffects } from "./effects";
+import { getCardNameFr } from "../i18n";
 import { drawCards } from "./draw";
 import { refillTradeRow } from "./engine";
 
@@ -35,7 +36,7 @@ export function resolveChoice(
   if (payload.type === "skip") {
     if (!choice.optional) return err(state, "invalid_choice");
     const s = { ...state, pendingChoices: state.pendingChoices.filter(c => c.id !== choiceId) };
-    return ok(addLog(s, playerId, `Skipped optional choice.`));
+    return ok(addLog(s, playerId, `Choix optionnel ignoré.`));
   }
 
   // Payload type must match choice type
@@ -140,7 +141,7 @@ export function resolveChoice(
         if (!inst) continue;
         s = moveCard(inst, "scrap_heap", s);
         scrappedCount++;
-        s = addLog(s, playerId, `Scrapped ${getCardDef(inst.definitionId).name}.`);
+        s = addLog(s, playerId, `Écarte ${getCardNameFr(inst.definitionId)}.`);
       }
       // Brain World: draw per card scrapped
       const srcInst = s.players[playerId].bases.find(c => c.instanceId === choice.sourceCardInstanceId);
@@ -148,7 +149,7 @@ export function resolveChoice(
         const def = getCardDef(srcInst.definitionId);
         if (def.primaryEffects.some(e => e.type === "draw_per_card_scrapped_this_way") && scrappedCount > 0) {
           s = drawCards(s, playerId, scrappedCount);
-          s = addLog(s, playerId, `Drew ${scrappedCount} card(s) (Brain World).`);
+          s = addLog(s, playerId, `Pioche ${scrappedCount} carte(s) (Monde Cerveau).`);
         }
       }
       return ok(s);
@@ -160,7 +161,7 @@ export function resolveChoice(
       const inst = s.tradeRow.find(c => c.instanceId === cid);
       if (inst) {
         s = moveCard(inst, "scrap_heap", s);
-        s = addLog(s, playerId, `Scrapped ${getCardDef(inst.definitionId).name} from Trade Row.`);
+        s = addLog(s, playerId, `Écarte ${getCardNameFr(inst.definitionId)} de la rangée.`);
         s = refillTradeRow(s);
       }
       return ok(s);
@@ -173,7 +174,7 @@ export function resolveChoice(
       const inst = s.players[opponentId].bases.find(c => c.instanceId === cid);
       if (inst) {
         s = moveCard(inst, "discard", s);
-        s = addLog(s, playerId, `Destroyed ${getCardDef(inst.definitionId).name}.`);
+        s = addLog(s, playerId, `Détruit ${getCardNameFr(inst.definitionId)}.`);
         s = {
           ...s,
           activeTriggers: s.activeTriggers.filter(t => t.sourceCardInstanceId !== cid),
@@ -194,7 +195,7 @@ export function resolveChoice(
       }
       if (discarded > 0) {
         s = drawCards(s, playerId, discarded);
-        s = addLog(s, playerId, `Discarded ${discarded} and drew ${discarded}.`);
+        s = addLog(s, playerId, `Défausse ${discarded} et pioche ${discarded}.`);
       }
       return ok(s);
     }
@@ -206,7 +207,7 @@ export function resolveChoice(
         const inst = s.players[playerId].hand.find(c => c.instanceId === cid);
         if (!inst) continue;
         s = moveCard(inst, "discard", s);
-        s = addLog(s, playerId, `Discarded ${getCardDef(inst.definitionId).name}.`);
+        s = addLog(s, playerId, `Défausse ${getCardNameFr(inst.definitionId)}.`);
       }
       return ok(s);
     }
@@ -226,7 +227,7 @@ export function resolveChoice(
       s = applyEffects(s, playerId, originalDef.primaryEffects.filter(e => e.type !== "self_scrap"), choice.sourceCardInstanceId);
       // Reapply ally effects: the new temporaryFaction may unlock new ally bonuses
       s = reapplyAllAllyEffects(s, playerId);
-      return ok(addLog(s, playerId, `Stealth Needle copied ${originalDef.name}.`));
+      return ok(addLog(s, playerId, `Aiguille Furtive copie ${getCardNameFr(original.definitionId)}.`));
     }
 
     case "select_ship_to_acquire_free": {
@@ -238,7 +239,7 @@ export function resolveChoice(
       s = removeFromZone(inst.instanceId, s);
       s = { ...s, players: { ...s.players, [playerId]: { ...s.players[playerId], deck: [updated, ...s.players[playerId].deck] } } };
       s = refillTradeRow(s);
-      return ok(addLog(s, playerId, `Acquired ${getCardDef(inst.definitionId).name} for free (top of deck).`));
+      return ok(addLog(s, playerId, `Acquiert ${getCardNameFr(inst.definitionId)} gratuitement (dessus de pioche).`));
     }
   }
 }

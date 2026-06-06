@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { GameState, PendingChoice, PlayerId, Effect } from "../game/types";
 import type { ChoicePayload } from "../game/choices";
 import { CardView } from "./CardView";
+import { fr, renderEffectFr } from "../i18n";
 
 interface Props {
   state: GameState;
@@ -53,11 +54,11 @@ function ChoiceResolver({ choice, state, onResolve }: {
     case "choose_one": {
       return (
         <div>
-          <Title text="Choose one:" />
+          <Title text={fr.choiceLabels.choose_one} />
           <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "8px" }}>
             {choice.options!.map((option, i) => (
               <button key={i} onClick={() => onResolve(choice.id, { type: "choose_one", optionIndex: i })}>
-                {option.map((e: Effect) => describeEffect(e)).join(", ")}
+                {option.map((e: Effect) => renderEffectFr(e)).join(", ")}
               </button>
             ))}
           </div>
@@ -67,9 +68,11 @@ function ChoiceResolver({ choice, state, onResolve }: {
 
     case "select_cards_to_scrap":
     case "select_cards_to_discard_then_draw": {
-      const label = choice.type === "select_cards_to_scrap" ? "scrap" : "discard";
-      const candidates = getCandidates(choice, state);
+      const labelFn = choice.type === "select_cards_to_scrap"
+        ? fr.choiceLabels.select_cards_to_scrap
+        : fr.choiceLabels.select_cards_to_discard_then_draw;
       const max = choice.amount ?? 1;
+      const candidates = getCandidates(choice, state);
 
       function toggle(id: string) {
         setSelected(prev =>
@@ -79,7 +82,7 @@ function ChoiceResolver({ choice, state, onResolve }: {
 
       return (
         <div>
-          <Title text={`Select up to ${max} card(s) to ${label}:`} />
+          <Title text={labelFn(max)} />
           <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "8px" }}>
             {candidates.map((card) => (
               <CardView
@@ -92,9 +95,9 @@ function ChoiceResolver({ choice, state, onResolve }: {
           </div>
           <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
             <button className="primary" onClick={() => onResolve(choice.id, { type: "select_cards", cardIds: selected })}>
-              Confirm ({selected.length} selected)
+              {fr.ui.confirmSelected(selected.length)}
             </button>
-            {skipable && <button onClick={skip}>Skip</button>}
+            {skipable && <button onClick={skip}>{fr.actions.skip}</button>}
           </div>
         </div>
       );
@@ -112,7 +115,7 @@ function ChoiceResolver({ choice, state, onResolve }: {
 
       return (
         <div>
-          <Title text={`Discard ${amount} card(s):`} />
+          <Title text={fr.choiceLabels.opponent_discard(amount)} />
           <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "8px" }}>
             {candidates.map((card) => (
               <CardView
@@ -129,7 +132,7 @@ function ChoiceResolver({ choice, state, onResolve }: {
               disabled={selected.length < Math.min(amount, candidates.length)}
               onClick={() => onResolve(choice.id, { type: "select_cards", cardIds: selected })}
             >
-              Confirm
+              {fr.actions.confirm}
             </button>
           </div>
         </div>
@@ -141,10 +144,10 @@ function ChoiceResolver({ choice, state, onResolve }: {
     case "select_ship_to_acquire_free":
     case "select_ship_to_copy": {
       const labels: Record<string, string> = {
-        select_trade_row_card_to_scrap: "Scrap from Trade Row:",
-        select_base_to_destroy: "Destroy a base:",
-        select_ship_to_acquire_free: "Acquire a ship for free:",
-        select_ship_to_copy: "Copy a ship:",
+        select_trade_row_card_to_scrap: fr.choiceLabels.select_trade_row_card_to_scrap,
+        select_base_to_destroy: fr.choiceLabels.select_base_to_destroy,
+        select_ship_to_acquire_free: fr.choiceLabels.select_ship_to_acquire_free,
+        select_ship_to_copy: fr.choiceLabels.select_ship_to_copy,
       };
       const candidates = getCandidates(choice, state);
 
@@ -163,7 +166,7 @@ function ChoiceResolver({ choice, state, onResolve }: {
           </div>
           {skipable && (
             <div style={{ marginTop: "12px" }}>
-              <button onClick={skip}>Skip</button>
+              <button onClick={skip}>{fr.actions.skip}</button>
             </div>
           )}
         </div>
@@ -173,8 +176,8 @@ function ChoiceResolver({ choice, state, onResolve }: {
     default:
       return (
         <div>
-          <Title text="Unknown choice" />
-          {skipable && <button onClick={skip}>Skip</button>}
+          <Title text={fr.ui.unknownChoice} />
+          {skipable && <button onClick={skip}>{fr.actions.skip}</button>}
         </div>
       );
   }
@@ -193,15 +196,4 @@ function getCandidates(choice: PendingChoice, state: GameState) {
     ...Object.values(state.players).flatMap(p => [...p.deck, ...p.hand, ...p.discard, ...p.inPlay, ...p.bases]),
   ];
   return all.filter(c => ids.has(c.instanceId));
-}
-
-function describeEffect(e: Effect): string {
-  switch (e.type) {
-    case "gain_trade": return `+${e.amount} Trade`;
-    case "gain_combat": return `+${e.amount} Combat`;
-    case "gain_authority": return `+${e.amount} Authority`;
-    case "draw": return `Draw ${e.amount}`;
-    case "discard_up_to_then_draw_same": return `Discard/Draw (${e.max})`;
-    default: return e.type.replace(/_/g, " ");
-  }
 }

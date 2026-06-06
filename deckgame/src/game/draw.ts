@@ -28,7 +28,7 @@ function drawOne(state: GameState, playerId: PlayerId): GameState {
         },
       },
     };
-    s = addLog(s, playerId, "Reshuffled discard into deck.");
+    s = addLog(s, playerId, "Défausse mélangée dans la pioche.");
   }
 
   const card = s.players[playerId].deck[0];
