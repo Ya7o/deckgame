@@ -1,0 +1,244 @@
+import type { GameState, PlayerId, EngineError, PendingChoice } from "./types";
+import { getCardDef } from "../data/cards";
+import {
+  playCard,
+  activateBase,
+  buyTradeRowCard,
+  buyExplorer,
+  attackBase,
+  attackOpponent,
+  endTurn,
+  resolvePendingChoice,
+} from "./engine";
+import type { ChoicePayload } from "./choices";
+
+export const MAX_BOT_ACTIONS_PER_TURN = 200;
+
+export type BotResult =
+  | { ok: true; state: GameState; actions: string[] }
+  | { ok: false; state: GameState; error: EngineError; actions: string[] };
+
+// ---------------------------------------------------------------------------
+// Main entry point
+// ---------------------------------------------------------------------------
+
+export function runBotTurn(state: GameState, botPlayerId: PlayerId): BotResult {
+  if (state.phase === "game_over") return { ok: true, state, actions: [] };
+  if (state.currentPlayerId !== botPlayerId) return { ok: true, state, actions: [] };
+
+  let s = state;
+  const actions: string[] = [];
+  let iterations = 0;
+
+  while (iterations < MAX_BOT_ACTIONS_PER_TURN) {
+    iterations++;
+
+    if (s.phase === "game_over") break;
+    if (s.currentPlayerId !== botPlayerId) break;
+
+    // 1. Resolve pending choices for the bot
+    const myChoices = s.pendingChoices.filter((c) => c.playerId === botPlayerId);
+    if (myChoices.length > 0) {
+      const choice = myChoices[0];
+      const payload = chooseBotPayload(s, botPlayerId, choice);
+      const result = resolvePendingChoice(s, botPlayerId, choice.id, payload);
+      if (!result.ok) return { ok: false, state: result.state, error: result.error, actions };
+      actions.push(`resolve:${choice.type}`);
+      s = result.state;
+      continue;
+    }
+
+    // 2. Play first card from hand
+    const hand = s.players[botPlayerId].hand;
+    if (hand.length > 0) {
+      const card = hand[0];
+      const result = playCard(s, botPlayerId, card.instanceId);
+      if (result.ok) {
+        actions.push(`play:${card.definitionId}`);
+        s = result.state;
+        continue;
+      }
+    }
+
+    // 3. Activate the first ready base
+    const readyBase = s.players[botPlayerId].bases.find((b) => !b.exhausted);
+    if (readyBase) {
+      const result = activateBase(s, botPlayerId, readyBase.instanceId);
+      if (result.ok) {
+        actions.push(`activate:${readyBase.definitionId}`);
+        s = result.state;
+        continue;
+      }
+    }
+
+    // 4. Buy the best affordable card
+    const bought = tryBotBuy(s, botPlayerId, actions);
+    if (bought) {
+      s = bought;
+      continue;
+    }
+
+    // 5. Attack
+    const attacked = tryBotAttack(s, botPlayerId, actions);
+    if (attacked) {
+      s = attacked;
+      continue;
+    }
+
+    // 6. Nothing more to do — end turn
+    const result = endTurn(s, botPlayerId);
+    if (!result.ok) return { ok: false, state: result.state, error: result.error, actions };
+    actions.push("end_turn");
+    s = result.state;
+    break;
+  }
+
+  return { ok: true, state: s, actions };
+}
+
+// ---------------------------------------------------------------------------
+// Buy heuristic: most expensive affordable card first; explorer as fallback
+// ---------------------------------------------------------------------------
+
+function tryBotBuy(state: GameState, botPlayerId: PlayerId, actions: string[]): GameState | null {
+  const trade = state.players[botPlayerId].currentTrade;
+  if (trade <= 0) return null;
+
+  const affordable = state.tradeRow
+    .filter((c) => (getCardDef(c.definitionId).cost ?? 999) <= trade)
+    .sort(
+      (a, b) =>
+        (getCardDef(b.definitionId).cost ?? 0) - (getCardDef(a.definitionId).cost ?? 0)
+    );
+
+  if (affordable.length > 0) {
+    const result = buyTradeRowCard(state, botPlayerId, affordable[0].instanceId);
+    if (result.ok) {
+      actions.push(`buy:${affordable[0].definitionId}`);
+      return result.state;
+    }
+  }
+
+  if (trade >= 2 && state.explorerPile.length > 0) {
+    const result = buyExplorer(state, botPlayerId);
+    if (result.ok) {
+      actions.push("buy:explorer");
+      return result.state;
+    }
+  }
+
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// Attack heuristic: outposts first (enables direct attack), then direct
+// ---------------------------------------------------------------------------
+
+function tryBotAttack(state: GameState, botPlayerId: PlayerId, actions: string[]): GameState | null {
+  const combat = state.players[botPlayerId].currentCombat;
+  if (combat <= 0) return null;
+
+  const opponent = state.players[state.opponentPlayerId];
+
+  // Attack destroyable bases — outposts first, then by highest defense
+  const destroyable = opponent.bases
+    .filter((b) => (getCardDef(b.definitionId).defense ?? 999) <= combat)
+    .sort((a, b) => {
+      const aOut = getCardDef(a.definitionId).isOutpost ? 1 : 0;
+      const bOut = getCardDef(b.definitionId).isOutpost ? 1 : 0;
+      if (aOut !== bOut) return bOut - aOut;
+      return (getCardDef(b.definitionId).defense ?? 0) - (getCardDef(a.definitionId).defense ?? 0);
+    });
+
+  if (destroyable.length > 0) {
+    const result = attackBase(state, botPlayerId, destroyable[0].instanceId);
+    if (result.ok) {
+      actions.push(`attack_base:${destroyable[0].definitionId}`);
+      return result.state;
+    }
+  }
+
+  // Attack opponent directly if no outposts remain
+  const hasOutpost = opponent.bases.some((b) => getCardDef(b.definitionId).isOutpost);
+  if (!hasOutpost) {
+    const result = attackOpponent(state, botPlayerId, combat);
+    if (result.ok) {
+      actions.push(`attack_opponent:${combat}`);
+      return result.state;
+    }
+  }
+
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// Choice resolver — heuristics per choice type
+// ---------------------------------------------------------------------------
+
+function chooseBotPayload(state: GameState, botPlayerId: PlayerId, choice: PendingChoice): ChoicePayload {
+  switch (choice.type) {
+    case "choose_one":
+      return { type: "choose_one", optionIndex: 0 };
+
+    case "select_cards_to_scrap":
+      // V0 limitation: bot skips optional scrap; sends empty for mandatory
+      if (choice.optional) return { type: "skip" };
+      return { type: "select_cards", cardIds: [] };
+
+    case "select_trade_row_card_to_scrap": {
+      // Scrap the cheapest card to thin the row, even when optional
+      const candidates = (choice.candidateIds ?? [])
+        .map((id) => state.tradeRow.find((c) => c.instanceId === id))
+        .filter((c): c is NonNullable<typeof c> => c !== undefined);
+      if (candidates.length === 0) return choice.optional ? { type: "skip" } : { type: "select_cards", cardIds: [] };
+      const cheapest = candidates.reduce((a, b) =>
+        (getCardDef(a.definitionId).cost ?? 0) <= (getCardDef(b.definitionId).cost ?? 0) ? a : b
+      );
+      return { type: "select_cards", cardIds: [cheapest.instanceId] };
+    }
+
+    case "select_base_to_destroy": {
+      // Destroy weakest opponent base, even when optional
+      const opponentBases = state.players[state.opponentPlayerId].bases;
+      const candidates = (choice.candidateIds ?? [])
+        .map((id) => opponentBases.find((b) => b.instanceId === id))
+        .filter((c): c is NonNullable<typeof c> => c !== undefined);
+      if (candidates.length === 0) return choice.optional ? { type: "skip" } : { type: "select_cards", cardIds: [] };
+      const weakest = candidates.reduce((a, b) =>
+        (getCardDef(a.definitionId).defense ?? 999) <= (getCardDef(b.definitionId).defense ?? 999) ? a : b
+      );
+      return { type: "select_cards", cardIds: [weakest.instanceId] };
+    }
+
+    case "select_cards_to_discard_then_draw":
+      // V0 limitation: bot skips optional discard/redraw
+      if (choice.optional) return { type: "skip" };
+      return { type: "select_cards", cardIds: [] };
+
+    case "opponent_discard": {
+      // Bot discards its cheapest cards when forced
+      const player = state.players[botPlayerId];
+      const amount = choice.amount ?? 1;
+      const sorted = [...player.hand].sort(
+        (a, b) => (getCardDef(a.definitionId).cost ?? 0) - (getCardDef(b.definitionId).cost ?? 0)
+      );
+      return { type: "select_cards", cardIds: sorted.slice(0, amount).map((c) => c.instanceId) };
+    }
+
+    case "select_ship_to_copy": {
+      const candidateIds = choice.candidateIds ?? [];
+      return { type: "select_cards", cardIds: candidateIds.length > 0 ? [candidateIds[0]] : [] };
+    }
+
+    case "select_ship_to_acquire_free": {
+      const candidates = (choice.candidateIds ?? [])
+        .map((id) => state.tradeRow.find((c) => c.instanceId === id))
+        .filter((c): c is NonNullable<typeof c> => c !== undefined);
+      if (candidates.length === 0) return { type: "select_cards", cardIds: [] };
+      const best = candidates.reduce((a, b) =>
+        (getCardDef(a.definitionId).cost ?? 0) >= (getCardDef(b.definitionId).cost ?? 0) ? a : b
+      );
+      return { type: "select_cards", cardIds: [best.instanceId] };
+    }
+  }
+}

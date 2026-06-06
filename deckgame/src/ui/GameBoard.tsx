@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { GameState, CardInstance } from "../game/types";
 import { getCardDef } from "../data/cards";
 import type { ChoicePayload } from "../game/choices";
@@ -19,16 +19,31 @@ import { PendingChoicePanel } from "./PendingChoicePanel";
 import { GameLog } from "./GameLog";
 import { resolvePendingChoice } from "../game/engine";
 import { fr } from "../i18n";
+import type { GameMode } from "./gameMode";
+import { runBotTurn } from "../game/bot";
 
 interface Props {
   initialState: GameState;
   onNewGame: () => void;
+  gameMode: GameMode;
 }
 
-export function GameBoard({ initialState, onNewGame }: Props) {
+export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
   const [state, setState] = useState<GameState>(initialState);
   const [selected, setSelected] = useState<CardInstance | null>(null);
   const [showLog, setShowLog] = useState(false);
+
+  // Auto-trigger bot turn in solo mode
+  useEffect(() => {
+    if (gameMode !== "solo_bot") return;
+    if (state.phase === "game_over") return;
+    if (state.currentPlayerId !== "player_2") return;
+    const timer = setTimeout(() => {
+      const result = runBotTurn(state, "player_2");
+      setState(result.state);
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [state, gameMode]);
 
   const viewerId = state.currentPlayerId;
   const player = state.players[viewerId];
@@ -56,6 +71,8 @@ export function GameBoard({ initialState, onNewGame }: Props) {
     return <GameOverScreen state={state} onNewGame={onNewGame} />;
   }
 
+  const isBotTurn = gameMode === "solo_bot" && state.currentPlayerId === "player_2";
+
   const hasPendingForMe = state.pendingChoices.some(c => c.playerId === viewerId);
   const hasPendingForOpponent = state.pendingChoices.some(c => c.playerId !== viewerId);
   const opponentOutposts = opponent.bases.filter(b => getCardDef(b.definitionId).isOutpost);
@@ -66,6 +83,16 @@ export function GameBoard({ initialState, onNewGame }: Props) {
       display: "flex", flexDirection: "column", height: "100%",
       background: "var(--bg)", overflow: "hidden",
     }}>
+      {/* BOT THINKING BANNER */}
+      {isBotTurn && (
+        <div style={{
+          padding: "6px 12px", background: "var(--surface2)", borderBottom: "1px solid var(--border)",
+          textAlign: "center", fontSize: "12px", color: "var(--text-muted)", flexShrink: 0,
+        }}>
+          {fr.bot.thinkingLabel}
+        </div>
+      )}
+
       {/* ZONE ADVERSE */}
       <div style={{
         padding: "8px",

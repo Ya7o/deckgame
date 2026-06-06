@@ -45,10 +45,15 @@ deckgame/
 │   │   ├── choices.ts        # Pending choice resolution
 │   │   ├── draw.ts           # Draw logic
 │   │   ├── utils.ts          # Card movement helpers
-│   │   └── validators.ts     # State invariant checks
+│   │   ├── validators.ts     # State invariant checks
+│   │   └── bot.ts            # Simple AI bot (solo mode)
+│   ├── i18n/                 # French localisation layer
 │   ├── ui/                   # React components
+│   │   └── gameMode.ts       # GameMode type ("local_2p" | "solo_bot")
 │   └── tests/
-│       └── engine.test.ts    # 69 unit tests
+│       ├── engine.test.ts    # 69 engine unit tests
+│       ├── i18n.test.ts      # 14 i18n tests
+│       └── bot.test.ts       # 14 bot tests
 ├── vite.config.ts            # base: '/deckgame/' for GitHub Pages
 └── package.json
 ```
@@ -64,6 +69,28 @@ Every push to `master` triggers the GitHub Actions workflow:
 
 La V0 utilise le français comme langue d'affichage par défaut.
 Les identifiants techniques et les IDs de cartes restent en anglais pour préserver la stabilité du moteur et des tests.
+
+## Mode solo
+
+L'écran d'accueil propose deux modes :
+
+| Bouton | Description |
+|---|---|
+| **2 Joueurs** | Passage de la main local, deux joueurs partagent un écran |
+| **Contre le Bot** | Jouez contre une IA simple (player_2) |
+
+Le bot (`src/game/bot.ts`) utilise uniquement les actions publiques du moteur et suit ces heuristiques :
+
+1. Résoudre les choix en attente
+2. Jouer toutes les cartes de sa main
+3. Activer les bases disponibles
+4. Acheter la carte abordable la plus coûteuse (ou un Explorateur en secours)
+5. Détruire les avant-postes adverses en priorité, puis attaquer directement
+6. Fin du tour
+
+`MAX_BOT_ACTIONS_PER_TURN = 200` protège contre les boucles infinies.
+
+**Limites V0** : le bot ignore les récupérations optionnelles (cartes Culte des Machines) et les effets de défausse/pioche optionnels.
 
 ## Known limits (V0 scope)
 

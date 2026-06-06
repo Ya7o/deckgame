@@ -169,13 +169,21 @@ export const fr = {
 
   startScreen: {
     title: "DECKGAME V0",
-    subtitle: "Star Realms Core Set · Passage de la main · 2 joueurs",
+    subtitle: "Star Realms Core Set · Passage de la main",
     player1Placeholder: "Nom du Joueur 1",
     player2Placeholder: "Nom du Joueur 2",
     player1Default: "Joueur 1",
     player2Default: "Joueur 2",
     startButton: "Commencer",
+    mode2p: "2 Joueurs",
+    modeSolo: "Contre le Bot",
+    botName: "Bot",
     rulesLine1: "Chaque joueur commence avec 8 Éclaireurs + 2 Vipères, 50 Autorité.",
     rulesLine2: "Rangée commerciale · Pile des Explorateurs · 80 cartes.",
+  },
+
+  bot: {
+    thinkingLabel: "Le Bot réfléchit…",
+    turnLabel: "Tour du Bot",
   },
 };
