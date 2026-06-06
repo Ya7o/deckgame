@@ -260,6 +260,75 @@ describe("draw and reshuffle", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Bases — activation double fix (PATCH 0002)
+// ---------------------------------------------------------------------------
+
+describe("base activation", () => {
+  it("playing Blob Wheel does NOT give +1 Combat immediately", () => {
+    let s = setupGame();
+    // Inject Blob Wheel into hand
+    const bw = mkInstance("blob_wheel", "player_1", "hand");
+    s = { ...s, players: { ...s.players, player_1: { ...s.players.player_1, hand: [bw] } } };
+    const r = playCard(s, "player_1", bw.instanceId);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.state.players.player_1.currentCombat).toBe(0);
+  });
+
+  it("activating Blob Wheel gives +1 Combat", () => {
+    let s = setupGame();
+    const bw = mkInstance("blob_wheel", "player_1", "hand");
+    s = { ...s, players: { ...s.players, player_1: { ...s.players.player_1, hand: [bw] } } };
+    const r1 = playCard(s, "player_1", bw.instanceId);
+    expect(r1.ok).toBe(true);
+    if (!r1.ok) return;
+    const r2 = activateBase(r1.state, "player_1", bw.instanceId);
+    expect(r2.ok).toBe(true);
+    if (!r2.ok) return;
+    expect(r2.state.players.player_1.currentCombat).toBe(1);
+  });
+
+  it("activating Blob Wheel twice in the same turn fails", () => {
+    let s = setupGame();
+    const bw = mkInstance("blob_wheel", "player_1", "hand");
+    s = { ...s, players: { ...s.players, player_1: { ...s.players.player_1, hand: [bw] } } };
+    const r1 = playCard(s, "player_1", bw.instanceId);
+    if (!r1.ok) return;
+    const r2 = activateBase(r1.state, "player_1", bw.instanceId);
+    if (!r2.ok) return;
+    const r3 = activateBase(r2.state, "player_1", bw.instanceId);
+    expect(r3.ok).toBe(false);
+    if (!r3.ok) expect(r3.error).toBe("base_already_exhausted");
+  });
+
+  it("a base played this turn can be activated once", () => {
+    let s = setupGame();
+    const th = mkInstance("the_hive", "player_1", "hand");
+    s = { ...s, players: { ...s.players, player_1: { ...s.players.player_1, hand: [th] } } };
+    const r1 = playCard(s, "player_1", th.instanceId);
+    expect(r1.ok).toBe(true);
+    if (!r1.ok) return;
+    expect(r1.state.players.player_1.currentCombat).toBe(0);
+    const r2 = activateBase(r1.state, "player_1", th.instanceId);
+    expect(r2.ok).toBe(true);
+    if (!r2.ok) return;
+    expect(r2.state.players.player_1.currentCombat).toBe(3);
+  });
+
+  it("a base stays in play after end turn and exhaustion resets", () => {
+    let s = setupGame();
+    const bw = mkInstance("blob_wheel", "player_1", "bases");
+    s = { ...s, players: { ...s.players, player_1: { ...s.players.player_1, bases: [{ ...bw, exhausted: true }] } } };
+    const r = endTurn(s, "player_1");
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    const base = r.state.players.player_1.bases.find(b => b.instanceId === bw.instanceId);
+    expect(base).toBeDefined();
+    expect(base!.exhausted).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Combat
 // ---------------------------------------------------------------------------
 

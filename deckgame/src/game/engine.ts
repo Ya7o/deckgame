@@ -179,16 +179,24 @@ export function playCard(
 
   s = addLog(s, playerId, `Played ${def.name}.`);
 
-  // Fleet HQ trigger (ships only, only if already in play)
   if (def.type === "ship") {
+    // Fleet HQ trigger fires for ships entering play
     s = applyShipPlayedTriggers(s, playerId);
+    // Ships apply their primary effects immediately (excluding self_scrap)
+    const shipEffects = def.primaryEffects.filter((e) => e.type !== "self_scrap");
+    s = applyEffects(s, playerId, shipEffects, cardInstanceId);
+  } else {
+    // Bases do NOT apply primary effects on entry — only via activateBase.
+    // Exception: register Fleet HQ trigger so future ships benefit from it.
+    for (const e of def.primaryEffects) {
+      if (e.type === "trigger_on_play_ship_gain_combat") {
+        s = applyEffects(s, playerId, [e], cardInstanceId);
+      }
+    }
+    // counts_as_ally_all_factions is passive — no action needed here.
   }
 
-  // Primary effects (skip self_scrap — those are manual)
-  const primaryEffects = def.primaryEffects.filter((e) => e.type !== "self_scrap");
-  s = applyEffects(s, playerId, primaryEffects, cardInstanceId);
-
-  // Ally effects (for newly played card + re-evaluate existing cards)
+  // Re-evaluate ally effects (base now counts as an ally for other cards)
   s = reapplyAllAllyEffects(s, playerId);
 
   return ok(s);
