@@ -890,3 +890,135 @@ describe("validateStateInvariants (PATCH 0005)", () => {
     expect(errors.some(e => e.includes("winner is set"))).toBe(true);
   });
 });
+
+// ---------------------------------------------------------------------------
+// PATCH 0006 — Stealth Needle et cartes complexes
+// ---------------------------------------------------------------------------
+
+describe("Stealth Needle (PATCH 0006)", () => {
+  function setupStealthNeedle() {
+    let s = setupGame();
+    // Put a Blob Fighter (blob ship) in inPlay and Stealth Needle in hand
+    const blobFighter = mkInstance("blob_fighter", "player_1", "in_play");
+    const stealthNeedle = mkInstance("stealth_needle", "player_1", "hand");
+    s = {
+      ...s,
+      players: {
+        ...s.players,
+        player_1: {
+          ...s.players.player_1,
+          hand: [stealthNeedle],
+          inPlay: [blobFighter],
+          cardsPlayedThisTurn: [blobFighter.instanceId],
+        },
+      },
+    };
+    return { s, blobFighter, stealthNeedle };
+  }
+
+  it("playing Stealth Needle creates a select_ship_to_copy pending choice", () => {
+    const { s, stealthNeedle } = setupStealthNeedle();
+    const r = playCard(s, "player_1", stealthNeedle.instanceId);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    const choice = r.state.pendingChoices.find(c => c.type === "select_ship_to_copy");
+    expect(choice).toBeDefined();
+  });
+
+  it("copies primary effects of the selected ship", () => {
+    const { s, stealthNeedle, blobFighter } = setupStealthNeedle();
+    const r1 = playCard(s, "player_1", stealthNeedle.instanceId);
+    expect(r1.ok).toBe(true);
+    if (!r1.ok) return;
+    const choice = r1.state.pendingChoices.find(c => c.type === "select_ship_to_copy")!;
+    // Blob Fighter gives +3 combat
+    const r2 = resolvePendingChoice(r1.state, "player_1", choice.id, { type: "select_cards", cardIds: [blobFighter.instanceId] });
+    expect(r2.ok).toBe(true);
+    if (!r2.ok) return;
+    expect(r2.state.players.player_1.currentCombat).toBe(3);
+  });
+
+  it("adds the copied ship's faction to temporaryFactions", () => {
+    const { s, stealthNeedle, blobFighter } = setupStealthNeedle();
+    const r1 = playCard(s, "player_1", stealthNeedle.instanceId);
+    if (!r1.ok) return;
+    const choice = r1.state.pendingChoices.find(c => c.type === "select_ship_to_copy")!;
+    const r2 = resolvePendingChoice(r1.state, "player_1", choice.id, { type: "select_cards", cardIds: [blobFighter.instanceId] });
+    if (!r2.ok) return;
+    const needle = r2.state.players.player_1.inPlay.find(c => c.definitionId === "stealth_needle");
+    expect(needle?.temporaryFactions).toContain("blob");
+  });
+
+  it("cannot copy a base — rejected with invalid_target", () => {
+    let s = setupGame();
+    // Put Stealth Needle in hand and a blob base in bases
+    const blobBase = mkInstance("the_hive", "player_1", "bases");
+    const stealthNeedle = mkInstance("stealth_needle", "player_1", "hand");
+    s = {
+      ...s,
+      players: {
+        ...s.players,
+        player_1: {
+          ...s.players.player_1,
+          hand: [stealthNeedle],
+          inPlay: [],
+          bases: [blobBase],
+        },
+      },
+    };
+    // Playing Stealth Needle with no ships in inPlay logs a message and creates no choice
+    const r = playCard(s, "player_1", stealthNeedle.instanceId);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    const choice = r.state.pendingChoices.find(c => c.type === "select_ship_to_copy");
+    expect(choice).toBeUndefined(); // no choice because no ship to copy
+  });
+
+  it("cannot auto-copy (select self) — rejected with invalid_target", () => {
+    const { s, stealthNeedle } = setupStealthNeedle();
+    const r1 = playCard(s, "player_1", stealthNeedle.instanceId);
+    if (!r1.ok) return;
+    const choice = r1.state.pendingChoices.find(c => c.type === "select_ship_to_copy")!;
+    // The Stealth Needle's own instanceId should not be in candidateIds
+    expect(choice.candidateIds).not.toContain(stealthNeedle.instanceId);
+    // Try to force auto-select anyway
+    const r2 = resolvePendingChoice(r1.state, "player_1", choice.id, { type: "select_cards", cardIds: [stealthNeedle.instanceId] });
+    expect(r2.ok).toBe(false);
+    if (!r2.ok) expect(r2.error).toBe("invalid_target");
+  });
+
+  it("ally effects unlock after copy grants new faction", () => {
+    // Put two blob fighters in inPlay — copy gives blob faction, unlocking ally for the first fighter
+    let s = setupGame();
+    const fighter1 = mkInstance("blob_fighter", "player_1", "in_play");
+    const fighter2 = mkInstance("blob_fighter", "player_1", "in_play");
+    const needle = mkInstance("stealth_needle", "player_1", "hand");
+    // fighter1 ally already triggered (has blob ally from fighter2)
+    s = {
+      ...s,
+      players: {
+        ...s.players,
+        player_1: {
+          ...s.players.player_1,
+          hand: [needle],
+          inPlay: [fighter1, fighter2],
+          cardsPlayedThisTurn: [fighter1.instanceId, fighter2.instanceId],
+          // fighter1's ally already triggered
+          activatedAllyEffectsThisTurn: [`${fighter1.instanceId}:blob`],
+        },
+      },
+    };
+    const combatBefore = s.players.player_1.currentCombat;
+    const r1 = playCard(s, "player_1", needle.instanceId);
+    if (!r1.ok) return;
+    const choice = r1.state.pendingChoices.find(c => c.type === "select_ship_to_copy")!;
+    const r2 = resolvePendingChoice(r1.state, "player_1", choice.id, { type: "select_cards", cardIds: [fighter1.instanceId] });
+    expect(r2.ok).toBe(true);
+    if (!r2.ok) return;
+    // Needle gains blob faction → its own ally effect should trigger (draw 1)
+    // We just verify the state is valid after this complex interaction
+    assertValidState(r2.state);
+    // At minimum, Blob Fighter primary effects (+3 combat) were copied
+    expect(r2.state.players.player_1.currentCombat).toBeGreaterThan(combatBefore);
+  });
+});

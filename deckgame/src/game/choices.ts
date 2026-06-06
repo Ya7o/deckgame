@@ -1,7 +1,7 @@
 import type { GameState, PlayerId, EngineResult, EngineError } from "./types";
 import { getCardDef } from "../data/cards";
 import { addLog, findInstance, moveCard, removeFromZone } from "./utils";
-import { applyEffects } from "./effects";
+import { applyEffects, reapplyAllAllyEffects } from "./effects";
 import { drawCards } from "./draw";
 import { refillTradeRow } from "./engine";
 
@@ -224,6 +224,8 @@ export function resolveChoice(
         s = moveCard(updated, "in_play", s);
       }
       s = applyEffects(s, playerId, originalDef.primaryEffects.filter(e => e.type !== "self_scrap"), choice.sourceCardInstanceId);
+      // Reapply ally effects: the new temporaryFaction may unlock new ally bonuses
+      s = reapplyAllAllyEffects(s, playerId);
       return ok(addLog(s, playerId, `Stealth Needle copied ${originalDef.name}.`));
     }
 
