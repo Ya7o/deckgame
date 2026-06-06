@@ -15,6 +15,7 @@ import { resolvePendingChoice } from "../game/engine";
 import { getCardDef } from "../data/cards";
 import { mkInstance } from "../game/utils";
 import type { ChoicePayload } from "../game/choices";
+import type { PendingChoice } from "../game/types";
 
 // ---------------------------------------------------------------------------
 // Setup
@@ -690,5 +691,112 @@ describe("smoke test", () => {
     if (s.phase === "game_over") {
       expect(s.winner).not.toBeNull();
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// PATCH 0004 — resolveChoice validation
+// ---------------------------------------------------------------------------
+
+describe("resolveChoice validation (PATCH 0004)", () => {
+  function makeChoice(overrides: Partial<PendingChoice>): PendingChoice {
+    return {
+      id: "test-cid",
+      type: "choose_one",
+      playerId: "player_1",
+      sourceCardInstanceId: "src-inst",
+      optional: false,
+      options: [[{ type: "gain_trade", amount: 1 }]],
+      ...overrides,
+    };
+  }
+
+  it("unknown choiceId → invalid_choice, state reference unchanged", () => {
+    const s = setupGame();
+    const r = resolvePendingChoice(s, "player_1", "no-such-id", { type: "skip" });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toBe("invalid_choice");
+    expect(r.state).toBe(s);
+  });
+
+  it("wrong player → not_your_turn, state unchanged", () => {
+    const s = setupGame();
+    const choice = makeChoice({ id: "c1", playerId: "player_1" });
+    const sw = { ...s, pendingChoices: [choice] };
+    const r = resolvePendingChoice(sw, "player_2", "c1", { type: "choose_one", optionIndex: 0 });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toBe("not_your_turn");
+    expect(r.state).toBe(sw);
+  });
+
+  it("choose_one: out-of-range index → invalid_choice, choice not consumed", () => {
+    const s = setupGame();
+    const choice = makeChoice({ id: "c2", options: [[{ type: "gain_trade", amount: 1 }]] });
+    const sw = { ...s, pendingChoices: [choice] };
+    const r = resolvePendingChoice(sw, "player_1", "c2", { type: "choose_one", optionIndex: 5 });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toBe("invalid_choice");
+    expect(r.state.pendingChoices).toHaveLength(1);
+  });
+
+  it("select_cards_to_scrap: too many cards → invalid_choice, choice not consumed", () => {
+    const s = setupGame();
+    const [c1, c2] = s.players.player_1.hand;
+    const choice = makeChoice({
+      id: "c3", type: "select_cards_to_scrap", amount: 1,
+      candidateIds: [c1.instanceId, c2.instanceId],
+    });
+    const sw = { ...s, pendingChoices: [choice] };
+    const r = resolvePendingChoice(sw, "player_1", "c3", { type: "select_cards", cardIds: [c1.instanceId, c2.instanceId] });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toBe("invalid_choice");
+    expect(r.state.pendingChoices).toHaveLength(1);
+  });
+
+  it("select_cards_to_scrap: card not in candidateIds → invalid_target", () => {
+    const s = setupGame();
+    const [c1, c2] = s.players.player_1.hand;
+    const choice = makeChoice({
+      id: "c4", type: "select_cards_to_scrap", amount: 1,
+      candidateIds: [c1.instanceId],
+    });
+    const sw = { ...s, pendingChoices: [choice] };
+    const r = resolvePendingChoice(sw, "player_1", "c4", { type: "select_cards", cardIds: [c2.instanceId] });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toBe("invalid_target");
+    expect(r.state.pendingChoices).toHaveLength(1);
+  });
+
+  it("select_cards_to_scrap: card in candidateIds but not in hand/discard → invalid_target", () => {
+    const s = setupGame();
+    const fakeId = "ghost-card-id";
+    const choice = makeChoice({
+      id: "c5", type: "select_cards_to_scrap", amount: 1,
+      candidateIds: [fakeId],
+    });
+    const sw = { ...s, pendingChoices: [choice] };
+    const r = resolvePendingChoice(sw, "player_1", "c5", { type: "select_cards", cardIds: [fakeId] });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toBe("invalid_target");
+    expect(r.state.pendingChoices).toHaveLength(1);
+  });
+
+  it("skip on non-optional choice → invalid_choice, choice not consumed", () => {
+    const s = setupGame();
+    const choice = makeChoice({ id: "c6", optional: false });
+    const sw = { ...s, pendingChoices: [choice] };
+    const r = resolvePendingChoice(sw, "player_1", "c6", { type: "skip" });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toBe("invalid_choice");
+    expect(r.state.pendingChoices).toHaveLength(1);
+  });
+
+  it("skip on optional choice → ok, choice removed", () => {
+    const s = setupGame();
+    const choice = makeChoice({ id: "c7", optional: true });
+    const sw = { ...s, pendingChoices: [choice] };
+    const r = resolvePendingChoice(sw, "player_1", "c7", { type: "skip" });
+    expect(r.ok).toBe(true);
+    expect(r.state.pendingChoices).toHaveLength(0);
   });
 });

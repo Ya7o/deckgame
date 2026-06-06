@@ -497,13 +497,7 @@ export function resolvePendingChoice(
   payload: ChoicePayload
 ): EngineResult {
   if (state.phase === "game_over") return err(state, "game_already_over");
-
-  const choice = state.pendingChoices.find((c) => c.id === choiceId);
-  if (!choice) return err(state, "invalid_choice");
-  if (choice.playerId !== playerId) return err(state, "not_your_turn");
-
-  const s = resolveChoice(state, playerId, choiceId, payload);
-  return ok(s);
+  return resolveChoice(state, playerId, choiceId, payload);
 }
 
 // ---------------------------------------------------------------------------
