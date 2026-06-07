@@ -126,4 +126,4 @@ build  : PASS — dist/index.js 261 kB / 75.5 kB gzip
 
 ## Hash du commit
 
-À compléter après commit.
+0cb4d86
