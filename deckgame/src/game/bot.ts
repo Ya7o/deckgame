@@ -1,4 +1,5 @@
 import type { GameState, PlayerId, EngineError, PendingChoice } from "./types";
+import { type BotProfile, DEFAULT_PROFILE, chooseBestBuy, chooseAttackTarget } from "./bot-profile";
 import { getCardDef } from "../data/cards";
 import {
   playCard,
@@ -18,11 +19,16 @@ export type BotResult =
   | { ok: true; state: GameState; actions: string[] }
   | { ok: false; state: GameState; error: EngineError; actions: string[] };
 
+export type BotOptions = {
+  profile?: BotProfile;
+};
+
 // ---------------------------------------------------------------------------
 // Main entry point
 // ---------------------------------------------------------------------------
 
-export function runBotTurn(state: GameState, botPlayerId: PlayerId): BotResult {
+export function runBotTurn(state: GameState, botPlayerId: PlayerId, opts: BotOptions = {}): BotResult {
+  const profile = opts.profile ?? DEFAULT_PROFILE;
   if (state.phase === "game_over") return { ok: true, state, actions: [] };
   if (state.currentPlayerId !== botPlayerId) return { ok: true, state, actions: [] };
 
@@ -72,14 +78,14 @@ export function runBotTurn(state: GameState, botPlayerId: PlayerId): BotResult {
     }
 
     // 4. Buy the best affordable card
-    const bought = tryBotBuy(s, botPlayerId, actions);
+    const bought = tryBotBuy(s, botPlayerId, actions, profile);
     if (bought) {
       s = bought;
       continue;
     }
 
     // 5. Attack
-    const attacked = tryBotAttack(s, botPlayerId, actions);
+    const attacked = tryBotAttack(s, botPlayerId, actions, profile);
     if (attacked) {
       s = attacked;
       continue;
@@ -100,25 +106,22 @@ export function runBotTurn(state: GameState, botPlayerId: PlayerId): BotResult {
 // Buy heuristic: most expensive affordable card first; explorer as fallback
 // ---------------------------------------------------------------------------
 
-function tryBotBuy(state: GameState, botPlayerId: PlayerId, actions: string[]): GameState | null {
+function tryBotBuy(state: GameState, botPlayerId: PlayerId, actions: string[], profile: BotProfile): GameState | null {
   const trade = state.players[botPlayerId].currentTrade;
   if (trade <= 0) return null;
 
-  const affordable = state.tradeRow
-    .filter((c) => (getCardDef(c.definitionId).cost ?? 999) <= trade)
-    .sort(
-      (a, b) =>
-        (getCardDef(b.definitionId).cost ?? 0) - (getCardDef(a.definitionId).cost ?? 0)
-    );
+  // Use profile-aware scoring to pick the best card
+  const best = chooseBestBuy(state, botPlayerId, profile);
 
-  if (affordable.length > 0) {
-    const result = buyTradeRowCard(state, botPlayerId, affordable[0].instanceId);
+  if (best) {
+    const result = buyTradeRowCard(state, botPlayerId, best.instanceId);
     if (result.ok) {
-      actions.push(`buy:${affordable[0].definitionId}`);
+      actions.push(`buy:${best.definitionId}`);
       return result.state;
     }
   }
 
+  // Explorer fallback
   if (trade >= 2 && state.explorerPile.length > 0) {
     const result = buyExplorer(state, botPlayerId);
     if (result.ok) {
@@ -134,36 +137,21 @@ function tryBotBuy(state: GameState, botPlayerId: PlayerId, actions: string[]): 
 // Attack heuristic: outposts first (enables direct attack), then direct
 // ---------------------------------------------------------------------------
 
-function tryBotAttack(state: GameState, botPlayerId: PlayerId, actions: string[]): GameState | null {
-  const combat = state.players[botPlayerId].currentCombat;
-  if (combat <= 0) return null;
+function tryBotAttack(state: GameState, botPlayerId: PlayerId, actions: string[], profile: BotProfile): GameState | null {
+  const target = chooseAttackTarget(state, botPlayerId, profile);
+  if (!target) return null;
 
-  const opponent = state.players[state.opponentPlayerId];
-
-  // Attack destroyable bases — outposts first, then by highest defense
-  const destroyable = opponent.bases
-    .filter((b) => (getCardDef(b.definitionId).defense ?? 999) <= combat)
-    .sort((a, b) => {
-      const aOut = getCardDef(a.definitionId).isOutpost ? 1 : 0;
-      const bOut = getCardDef(b.definitionId).isOutpost ? 1 : 0;
-      if (aOut !== bOut) return bOut - aOut;
-      return (getCardDef(b.definitionId).defense ?? 0) - (getCardDef(a.definitionId).defense ?? 0);
-    });
-
-  if (destroyable.length > 0) {
-    const result = attackBase(state, botPlayerId, destroyable[0].instanceId);
+  if (target.type === "base") {
+    const inst = state.players[state.opponentPlayerId].bases.find(b => b.instanceId === target.instanceId);
+    const result = attackBase(state, botPlayerId, target.instanceId);
     if (result.ok) {
-      actions.push(`attack_base:${destroyable[0].definitionId}`);
+      actions.push(`attack_base:${inst?.definitionId ?? target.instanceId}`);
       return result.state;
     }
-  }
-
-  // Attack opponent directly if no outposts remain
-  const hasOutpost = opponent.bases.some((b) => getCardDef(b.definitionId).isOutpost);
-  if (!hasOutpost) {
-    const result = attackOpponent(state, botPlayerId, combat);
+  } else {
+    const result = attackOpponent(state, botPlayerId, target.amount);
     if (result.ok) {
-      actions.push(`attack_opponent:${combat}`);
+      actions.push(`attack_opponent:${target.amount}`);
       return result.state;
     }
   }

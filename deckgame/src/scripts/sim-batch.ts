@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/// <reference types="node" />
 /**
  * sim-batch.ts — Batch simulation runner (PATCH 0019)
  * Usage: npm run sim:batch [count] [startSeed]

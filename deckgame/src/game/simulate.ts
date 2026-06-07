@@ -1,4 +1,6 @@
 import type { GameState, PlayerId } from "./types";
+import type { BotProfileId } from "./bot-profile";
+import { BOT_PROFILES } from "./bot-profile";
 import { setupGame } from "./engine";
 import { runBotTurn } from "./bot";
 import { validateStateInvariants } from "./validators";
@@ -17,11 +19,15 @@ export type SimulationResult = {
   invariantErrors?: string[];
   actions: number;
   finalAuthority: Record<PlayerId, number>;
+  profileP1: BotProfileId;
+  profileP2: BotProfileId;
 };
 
 export type SimulationOptions = {
   seed: number;
   maxTurns?: number;
+  profileP1?: BotProfileId;
+  profileP2?: BotProfileId;
 };
 
 // ---------------------------------------------------------------------------
@@ -44,11 +50,13 @@ export function mulberry32(seed: number): () => number {
 
 export function runSimulation(opts: SimulationOptions): SimulationResult {
   const { seed, maxTurns = 200 } = opts;
+  const pP1: BotProfileId = opts.profileP1 ?? "balanced";
+  const pP2: BotProfileId = opts.profileP2 ?? "balanced";
   const rand = mulberry32(seed);
 
   const setupOpts: SetupOptions = {
-    player1Name: "Bot1",
-    player2Name: "Bot2",
+    player1Name: `Bot1(${pP1})`,
+    player2Name: `Bot2(${pP2})`,
     rand,
   };
 
@@ -59,7 +67,8 @@ export function runSimulation(opts: SimulationOptions): SimulationResult {
   while (state.phase !== "game_over" && turn < maxTurns) {
     turn++;
     const currentPlayer = state.currentPlayerId;
-    const result = runBotTurn(state, currentPlayer);
+    const profile = BOT_PROFILES[currentPlayer === "player_1" ? pP1 : pP2];
+    const result = runBotTurn(state, currentPlayer, { profile });
     totalActions += result.actions.length;
 
     if (!result.ok) {
@@ -74,6 +83,8 @@ export function runSimulation(opts: SimulationOptions): SimulationResult {
           player_1: result.state.players.player_1.authority,
           player_2: result.state.players.player_2.authority,
         },
+        profileP1: pP1,
+        profileP2: pP2,
       };
     }
 
@@ -93,6 +104,8 @@ export function runSimulation(opts: SimulationOptions): SimulationResult {
           player_1: state.players.player_1.authority,
           player_2: state.players.player_2.authority,
         },
+        profileP1: pP1,
+        profileP2: pP2,
       };
     }
   }
@@ -108,6 +121,8 @@ export function runSimulation(opts: SimulationOptions): SimulationResult {
         player_1: state.players.player_1.authority,
         player_2: state.players.player_2.authority,
       },
+      profileP1: pP1,
+      profileP2: pP2,
     };
   }
 
@@ -122,6 +137,8 @@ export function runSimulation(opts: SimulationOptions): SimulationResult {
       player_1: state.players.player_1.authority,
       player_2: state.players.player_2.authority,
     },
+    profileP1: pP1,
+    profileP2: pP2,
   };
 }
 
@@ -147,11 +164,11 @@ export type BatchSummary = {
   results: SimulationResult[];
 };
 
-export function runBatch(count: number, startSeed = 1, maxTurnsPerGame = 200): BatchSummary {
+export function runBatch(count: number, startSeed = 1, maxTurnsPerGame = 200, profileP1: BotProfileId = "balanced", profileP2: BotProfileId = "balanced"): BatchSummary {
   const results: SimulationResult[] = [];
 
   for (let i = 0; i < count; i++) {
-    results.push(runSimulation({ seed: startSeed + i, maxTurns: maxTurnsPerGame }));
+    results.push(runSimulation({ seed: startSeed + i, maxTurns: maxTurnsPerGame, profileP1, profileP2 }));
   }
 
   const completed = results.filter(r => r.terminatedBy === "authority").length;
