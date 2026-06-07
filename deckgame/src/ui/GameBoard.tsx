@@ -225,7 +225,7 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
         </div>
       </div>
 
-      {/* IN PLAY — horizontal scroll */}
+      {/* IN PLAY — ships + bases, horizontal scroll */}
       <div style={{
         padding: "8px",
         borderBottom: "1px solid var(--border)",
@@ -237,7 +237,7 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
           {fr.ui.inPlay}
         </div>
         <div style={{ overflowX: "auto" }}>
-          <div style={{ display: "flex", gap: "7px", flexWrap: "nowrap", paddingBottom: "2px" }}>
+          <div style={{ display: "flex", gap: "7px", flexWrap: "nowrap", paddingBottom: "2px", alignItems: "flex-start" }}>
             {player.inPlay.map((card) => {
               const def = getCardDef(card.definitionId);
               const hasSelfScrap = def.scrapEffects.some(e => e.type === "self_scrap");
@@ -258,37 +258,49 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
                 </div>
               );
             })}
+            {/* Visual separator between ships and bases when both present */}
+            {player.inPlay.length > 0 && player.bases.length > 0 && (
+              <div style={{ width: "1px", background: "var(--border)", alignSelf: "stretch", margin: "0 4px", flexShrink: 0 }} />
+            )}
             {player.bases.map((base) => {
               const def = getCardDef(base.definitionId);
               const hasSelfScrap = def.scrapEffects.some(e => e.type === "self_scrap");
               const canActivate = !base.exhausted && !hasPendingForMe && !isBotTurn;
               return (
-                <div key={base.instanceId} style={{ position: "relative" }}>
-                  <CardView
-                    card={base}
-                    onClick={() => handleCardClick(base)}
-                  />
+                <div key={base.instanceId} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+                  <div style={{ position: "relative" }}>
+                    <CardView
+                      card={base}
+                      onClick={() => handleCardClick(base)}
+                    />
+                    {hasSelfScrap && !hasPendingForMe && !isBotTurn && (
+                      <div
+                        onClick={(e) => { e.stopPropagation(); dispatch(activateSelfScrap(state, viewerId, base.instanceId)); }}
+                        style={{
+                          position: "absolute", top: "3px", right: "3px",
+                          fontSize: "9px", background: "var(--danger)", color: "#fff",
+                          padding: "1px 4px", borderRadius: "3px", cursor: "pointer",
+                          fontWeight: "bold",
+                        }}
+                      >⊗</div>
+                    )}
+                  </div>
                   {canActivate && (
                     <button
                       onClick={(e) => { e.stopPropagation(); dispatch(activateBase(state, viewerId, base.instanceId)); }}
                       style={{
-                        position: "absolute", bottom: "3px", left: "50%", transform: "translateX(-50%)",
-                        fontSize: "9px", background: "var(--empire)", color: "#fff",
-                        padding: "0 5px", borderRadius: "3px", fontWeight: "bold",
-                        border: "none", cursor: "pointer", whiteSpace: "nowrap",
+                        width: "var(--card-w)",
+                        fontSize: "10px",
+                        background: "var(--empire)",
+                        color: "#fff",
+                        padding: "3px 0",
+                        borderRadius: "4px",
+                        fontWeight: "bold",
+                        border: "none",
+                        cursor: "pointer",
+                        minHeight: "auto",
                       }}
                     >ACTIV.</button>
-                  )}
-                  {hasSelfScrap && !hasPendingForMe && !isBotTurn && (
-                    <div
-                      onClick={(e) => { e.stopPropagation(); dispatch(activateSelfScrap(state, viewerId, base.instanceId)); }}
-                      style={{
-                        position: "absolute", top: "3px", right: "3px",
-                        fontSize: "9px", background: "var(--danger)", color: "#fff",
-                        padding: "1px 4px", borderRadius: "3px", cursor: "pointer",
-                        fontWeight: "bold",
-                      }}
-                    >⊗</div>
                   )}
                 </div>
               );
@@ -362,6 +374,7 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
         display: "flex",
         flexDirection: "column",
         padding: "8px",
+        paddingBottom: "calc(8px + env(safe-area-inset-bottom, 0px))",
         background: "var(--bg)",
         minHeight: 0,
       }}>
@@ -369,7 +382,7 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
           {fr.ui.hand} — {player.name} ({fr.ui.turn} {state.turnNumber})
         </div>
         <div style={{ overflowX: "auto", flex: 1, display: "flex", alignItems: "flex-start" }}>
-          <div style={{ display: "flex", gap: "7px", flexWrap: "nowrap", paddingBottom: "env(safe-area-inset-bottom, 4px)" }}>
+          <div style={{ display: "flex", gap: "7px", flexWrap: "nowrap", paddingBottom: "4px" }}>
             {player.hand.map((card) => (
               <div key={card.instanceId} style={{ position: "relative" }}>
                 <CardView

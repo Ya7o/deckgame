@@ -57,7 +57,7 @@ export const fr = {
     tradeRow: "RANGÉE COMMERCIALE",
     tradeDeck: "Pioche comm.",
     explorerPile: "Explorateurs",
-    inPlay: "EN JEU — Vaisseaux",
+    inPlay: "EN JEU",
     hand: "MAIN",
     turn: "Tour",
     deck: "Pioche",
