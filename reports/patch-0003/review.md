@@ -34,4 +34,4 @@ Toutes les vérifications renvoient `{ ok: false, state }` avec l'état **origin
 - `attackBase` : pas de validation du type du montant (la défense vient de la définition de carte, toujours entier positif).
 
 ## Hash du commit
-À compléter après commit.
+`543ce91`

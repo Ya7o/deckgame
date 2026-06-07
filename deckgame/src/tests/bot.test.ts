@@ -439,3 +439,86 @@ describe("smoke test â jouabilite solo humain vs bot (PATCH 0010)", () => {
     }
   });
 });
+
+
+// ---------------------------------------------------------------------------
+// PATCH 0012 — Verrouillage des interactions humaines pendant le tour bot
+// ---------------------------------------------------------------------------
+
+import {
+  playCard as _playCard,
+  attackOpponent as _attackOpponent,
+  buyTradeRowCard as _buyTradeRowCard,
+  endTurn as _endTurn,
+} from "../game/engine";
+
+describe("verrouillage interactions humaines pendant le tour bot (PATCH 0012)", () => {
+  /**
+   * Pendant le tour du bot (player_2), le moteur refuse toute action de player_1
+   * via le mécanisme existant not_your_turn. Ce test prouve que le moteur est le
+   * garant ultime de l isolation des tours, indépendamment des vérifications UI.
+   */
+
+  function makeBotActiveState(): GameState {
+    const state = setupGame({ player1Name: "Humain", player2Name: "Bot" });
+    const r = endTurn(state, "player_1");
+    if (!r.ok) throw new Error("endTurn p1 failed");
+    return r.state; // currentPlayerId === "player_2"
+  }
+
+  it("playCard par player_1 pendant le tour bot retourne not_your_turn", () => {
+    const state = makeBotActiveState();
+    expect(state.currentPlayerId).toBe("player_2");
+    const card = state.players.player_1.hand[0];
+    const r = _playCard(state, "player_1", card.instanceId);
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.error).toBe("not_your_turn");
+      // Le GameState est inchangé
+      expect(r.state).toBe(state);
+    }
+  });
+
+  it("attackOpponent par player_1 pendant le tour bot retourne not_your_turn", () => {
+    const state = makeBotActiveState();
+    const withCombat = { ...state, players: { ...state.players, player_1: { ...state.players.player_1, currentCombat: 5 } } };
+    const r = _attackOpponent(withCombat, "player_1", 5);
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.error).toBe("not_your_turn");
+      expect(r.state.players.player_2.authority).toBe(50);
+    }
+  });
+
+  it("buyTradeRowCard par player_1 pendant le tour bot retourne not_your_turn", () => {
+    const state = makeBotActiveState();
+    const withTrade = { ...state, players: { ...state.players, player_1: { ...state.players.player_1, currentTrade: 10 } } };
+    const card = withTrade.tradeRow[0];
+    const r = _buyTradeRowCard(withTrade, "player_1", card.instanceId);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toBe("not_your_turn");
+  });
+
+  it("endTurn par player_1 pendant le tour bot retourne not_your_turn", () => {
+    const state = makeBotActiveState();
+    const r = _endTurn(state, "player_1");
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.error).toBe("not_your_turn");
+      expect(r.state).toBe(state);
+    }
+  });
+
+  it("le bot termine toujours son tour sans laisser de choix non resolus pour player_2", () => {
+    const state = makeBotActiveState();
+    const result = runBotTurn(state, "player_2");
+    expect(result.ok).toBe(true);
+    // Après le tour bot, aucun choix en attente pour player_2
+    const botChoices = result.state.pendingChoices.filter(c => c.playerId === "player_2");
+    expect(botChoices).toHaveLength(0);
+    // Et c'est maintenant le tour de player_1
+    if (result.state.phase !== "game_over") {
+      expect(result.state.currentPlayerId).toBe("player_1");
+    }
+  });
+});

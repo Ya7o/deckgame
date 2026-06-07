@@ -75,4 +75,4 @@ Primary `gain_trade:2; next_ship_acquired_to_top_deck_optional`. Ally : `draw:1`
 - `npm run check` : lint ✅ / 69 tests ✅ / build ✅
 
 ## Hash du commit
-À compléter après commit.
+`807c7bd`

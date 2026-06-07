@@ -39,4 +39,4 @@ Déjà correct — `base: '/deckgame/'` confirmé pour `https://Ya7o.github.io/d
 - `npm run check` : lint ✅ / 69 tests ✅ / build ✅
 
 ## Hash du commit
-À compléter après commit.
+`aa77adf`

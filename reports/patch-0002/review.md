@@ -32,4 +32,4 @@ Dans `playCard`, la branche commune appliquait `primaryEffects` pour tous les ty
 - Ally effects des Bases qui dépendent des ressources joués ce tour (ex. Blob World + Blob joués) : comportement inchangé, non impacté par ce patch.
 
 ## Hash du commit
-À compléter après commit.
+`68a6632`

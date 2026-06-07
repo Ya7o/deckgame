@@ -97,4 +97,4 @@ Interface, cartes, logs, effets, erreurs et choix interactifs entièrement en fr
 - Certains noms anglais ont été conservés si intraduisibles sans ambiguïté (ex. "Cutter", "Dreadnaught").
 
 ## Hash du commit
-À compléter après commit.
+`522a0a1`

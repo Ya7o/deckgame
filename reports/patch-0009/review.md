@@ -4,7 +4,7 @@
 Permettre au joueur de jouer seul contre un bot local, sans modifier le moteur ni les tests existants.
 
 ## Résultat
-Mode solo fonctionnel. Le bot joue automatiquement son tour via les actions publiques du moteur. 97 tests passent (69 moteur + 14 i18n + 14 bot).
+Mode solo fonctionnel. Le bot joue automatiquement son tour via les actions publiques du moteur. 99 tests passent (69 moteur + 14 i18n + 16 bot).
 
 ---
 
@@ -26,7 +26,7 @@ Le moteur est inchangé. Le bot est une couche au-dessus des actions publiques.
 |---|---|
 | `src/game/bot.ts` | `runBotTurn`, `tryBotBuy`, `tryBotAttack`, `chooseBotPayload`, `MAX_BOT_ACTIONS_PER_TURN = 200` |
 | `src/ui/gameMode.ts` | `GameMode = "local_2p" \| "solo_bot"` |
-| `src/tests/bot.test.ts` | 14 tests de comportement du bot |
+| `src/tests/bot.test.ts` | 16 tests de comportement du bot |
 
 ### Modifiés
 | Fichier | Changements |
@@ -86,7 +86,7 @@ Le moteur est inchangé. Le bot est une couche au-dessus des actions publiques.
 | Acquiert le vaisseau le plus cher via `select_ship_to_acquire_free` | ✅ |
 
 ## Tests exécutés
-- `npm run check` : lint ✅ / 97 tests ✅ (3 fichiers) / build ✅
+- `npm run check` : lint ✅ / 99 tests ✅ (3 fichiers) / build ✅
 
 ## Limites restantes
 - Bot ignore les récupérations optionnelles (Culte des Machines) — V0.

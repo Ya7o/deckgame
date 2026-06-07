@@ -45,4 +45,4 @@ Validations ajoutées :
 - `npm run check` : lint ✅ / 55 tests ✅ / build ✅
 
 ## Hash du commit
-À compléter après commit.
+`d5c165b`

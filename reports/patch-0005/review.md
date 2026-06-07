@@ -39,4 +39,4 @@ Zones inspectées : `tradeDeck`, `tradeRow`, `explorerPile`, `scrapHeap`, plus t
 - `npm run check` : lint ✅ / 63 tests ✅ / build ✅
 
 ## Hash du commit
-À compléter après commit.
+`b254dff`
