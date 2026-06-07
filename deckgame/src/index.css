@@ -6,7 +6,7 @@
   --surface2: #252535;
   --border: #333348;
   --text: #e8e8f0;
-  --text-muted: #8888aa;
+  --text-muted: #9999bb;
   --accent: #5b8fff;
   --danger: #ff5555;
   --success: #55cc77;
@@ -23,17 +23,19 @@
   --card-h: 112px;
 }
 
-html, body { height: 100%; width: 100%; overflow: hidden; }
-
+html { height: 100%; }
 body {
+  height: 100%;
+  width: 100%;
   background: var(--bg);
   color: var(--text);
   font-family: system-ui, -apple-system, sans-serif;
   font-size: 14px;
   line-height: 1.4;
+  overflow: hidden;
 }
 
-#root { height: 100%; display: flex; flex-direction: column; }
+#root { height: 100%; min-height: 100dvh; display: flex; flex-direction: column; }
 
 button {
   cursor: pointer;
@@ -65,8 +67,8 @@ button.warning { background: #aa5500; border-color: #cc7700; color: #fff; }
   text-transform: uppercase;
 }
 .badge-outpost { background: var(--danger); color: #fff; }
-.badge-base { background: #444466; color: var(--text); }
-.badge-ship { background: #335533; color: var(--text); }
+.badge-base { background: #3a3a66; color: #ccd; }
+.badge-ship { background: #1e3d2e; color: #9dc; }
 
 .faction-blob { color: var(--blob); }
 .faction-machine_cult { color: var(--machine); }
