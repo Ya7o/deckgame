@@ -89,4 +89,4 @@ Aucune modification de code dans ce patch.
 
 ## Hash du commit
 
-- A remplir apres git push
+- 58d00a7d46121f4ab55877dcc6214ecdfed92a54 (PATCH 0023)
