@@ -134,4 +134,4 @@ reshuffles non déterministes. Sur 200 parties, la variance se réduit à ~50%.
 
 ## Hash du commit
 
-- A remplir apres git push
+- d8b8eee21395d2089e7ae067dfaca8d2d61c7b7f (PATCH 0024)
