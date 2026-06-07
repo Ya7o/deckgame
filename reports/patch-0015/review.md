@@ -184,4 +184,4 @@ Captures automatiques non disponibles (WSL sans serveur d'affichage, Preview MCP
 
 ## Hash du commit
 
-À compléter après commit.
+f214505
