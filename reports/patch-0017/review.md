@@ -171,4 +171,4 @@ Voir `reports/patch-0017/screenshots/README.md`.
 
 ## Hash du commit
 
-A completer apres commit.
+a48d5f7
