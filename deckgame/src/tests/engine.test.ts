@@ -55,7 +55,7 @@ describe("setupGame", () => {
 
   it("explorer pile has 10 cards", () => {
     const s = setupGame();
-    expect(s.explorerPile.length).toBe(10);
+    expect(s.explorerPile.length).toBe(16); // B-13: increased from 10 to 16
   });
 
   it("player_1 is current player", () => {
@@ -210,7 +210,7 @@ describe("buying", () => {
     if (!r.ok) return;
     expect(r.state.players.player_1.discard.some(c => c.definitionId === "explorer")).toBe(true);
     expect(r.state.tradeRow.length).toBe(tradeRowBefore); // no refill
-    expect(r.state.explorerPile.length).toBe(9);
+    expect(r.state.explorerPile.length).toBe(15); // B-13: 16 - 1 bought
   });
 });
 

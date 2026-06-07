@@ -12,11 +12,7 @@ export type Zone =
   | "explorer_pile"
   | "scrap_heap";
 export type GamePhase =
-  | "setup"
-  | "start_turn"
   | "action_phase"
-  | "resolving_choice"
-  | "end_turn"
   | "game_over";
 
 // ---- Effects ----------------------------------------------------------------
@@ -94,10 +90,8 @@ export type PlayerState = {
   bases: CardInstance[];
   currentTrade: number;
   currentCombat: number;
-  pendingDiscard: number;
   cardsPlayedThisTurn: string[];
   activatedAllyEffectsThisTurn: string[];
-  hasEndedTurn: boolean;
 };
 
 // ---- Modifiers & triggers ---------------------------------------------------
@@ -160,7 +154,6 @@ export type GameOverReason = "authority_depleted" | "concede";
 export type GameState = {
   gameId: string;
   players: Record<PlayerId, PlayerState>;
-  playerOrder: PlayerId[];
   currentPlayerId: PlayerId;
   opponentPlayerId: PlayerId;
   turnNumber: number;
@@ -174,6 +167,7 @@ export type GameState = {
   activeTriggers: ActiveTrigger[];
   log: GameLogEntry[];
   randomSeed?: string;
+  rand?: () => number; // seeded RNG for deterministic reshuffles (B-12)
   winner: PlayerId | null;
   gameOverReason: GameOverReason | null;
 };

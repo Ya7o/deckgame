@@ -85,10 +85,8 @@ export function setupGame(options: SetupOptions = {}): GameState {
       bases: [],
       currentTrade: 0,
       currentCombat: 0,
-      pendingDiscard: 0,
       cardsPlayedThisTurn: [],
       activatedAllyEffectsThisTurn: [],
-      hasEndedTurn: false,
     };
   }
 
@@ -102,7 +100,8 @@ export function setupGame(options: SetupOptions = {}): GameState {
   const tradeDeck = shuffle(tradeDeckRaw, rand);
 
   // Explorer pile
-  const explorerPile: CardInstance[] = Array.from({ length: 10 }, () =>
+  // B-13: Explorer pile initialized to 16 (practical V0 upper bound; real rules are unlimited)
+  const explorerPile: CardInstance[] = Array.from({ length: 16 }, () =>
     mkInstance("explorer", null, "explorer_pile")
   );
 
@@ -112,9 +111,9 @@ export function setupGame(options: SetupOptions = {}): GameState {
       player_1: makePlayer("player_1", p1Name),
       player_2: makePlayer("player_2", p2Name),
     },
-    playerOrder: ["player_1", "player_2"],
     currentPlayerId: "player_1",
     opponentPlayerId: "player_2",
+    rand: options.rand,
     turnNumber: 1,
     phase: "action_phase",
     tradeDeck,
@@ -467,7 +466,7 @@ export function activateSelfScrap(
     player.inPlay.find((c) => c.instanceId === cardInstanceId) ??
     player.bases.find((c) => c.instanceId === cardInstanceId);
 
-  if (!cardInst) return err(state, "card_not_in_hand");
+  if (!cardInst) return err(state, "invalid_target");
 
   const def = getCardDef(cardInst.definitionId);
   const selfScrapEffect = def.scrapEffects.find((e) => e.type === "self_scrap");
@@ -549,10 +548,8 @@ export function endTurn(state: GameState, playerId: PlayerId): EngineResult {
         bases,
         currentTrade: 0,
         currentCombat: 0,
-        pendingDiscard: 0,
         cardsPlayedThisTurn: [],
         activatedAllyEffectsThisTurn: [],
-        hasEndedTurn: true,
       },
     },
   };
@@ -579,7 +576,7 @@ export function endTurn(state: GameState, playerId: PlayerId): EngineResult {
     opponentPlayerId: playerId,
     turnNumber: playerId === "player_2" ? s.turnNumber + 1 : s.turnNumber,
     phase: "action_phase",
-    players: { ...s.players, [nextPlayerId]: { ...s.players[nextPlayerId], hasEndedTurn: false } },
+
   };
 
   // Re-trigger Fleet HQ for next player's bases

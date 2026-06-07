@@ -16,7 +16,7 @@ function drawOne(state: GameState, playerId: PlayerId): GameState {
   if (player.deck.length === 0) {
     if (player.discard.length === 0) return s; // nothing to draw
     // reshuffle
-    const shuffled = shuffle(player.discard);
+    const shuffled = shuffle(player.discard, s.rand);
     s = {
       ...s,
       players: {
