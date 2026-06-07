@@ -171,4 +171,4 @@ Captures automatiques non disponibles (WSL sans serveur d'affichage).
 
 ## Hash du commit
 
-À compléter après commit.
+e728696
