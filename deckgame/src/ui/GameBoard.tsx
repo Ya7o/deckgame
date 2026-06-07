@@ -362,15 +362,24 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
         <div style={{ overflowX: "auto", flex: 1, display: "flex", alignItems: "flex-start" }}>
           <div style={{ display: "flex", gap: "7px", flexWrap: "nowrap", paddingBottom: "env(safe-area-inset-bottom, 4px)" }}>
             {player.hand.map((card) => (
-              <CardView
-                key={card.instanceId}
-                card={card}
-                playable={!hasPendingForMe && !isBotTurn}
-                onClick={() => {
-                  if (!hasPendingForMe && !isBotTurn) dispatch(playCard(state, viewerId, card.instanceId));
-                  else handleCardClick(card);
-                }}
-              />
+              <div key={card.instanceId} style={{ position: "relative" }}>
+                <CardView
+                  card={card}
+                  playable={!hasPendingForMe && !isBotTurn}
+                  onClick={() => handleCardClick(card)}
+                />
+                {!hasPendingForMe && !isBotTurn && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); dispatch(playCard(state, viewerId, card.instanceId)); }}
+                    style={{
+                      position: "absolute", bottom: "3px", left: "50%", transform: "translateX(-50%)",
+                      fontSize: "9px", background: "var(--accent)", color: "#fff",
+                      padding: "0 5px", borderRadius: "3px", fontWeight: "bold",
+                      border: "none", cursor: "pointer", whiteSpace: "nowrap",
+                    }}
+                  >{fr.ui.playBadge}</button>
+                )}
+              </div>
             ))}
             {player.hand.length === 0 && (
               <div style={{ color: "var(--text-muted)", fontSize: "12px", padding: "16px 0" }}>
@@ -398,7 +407,7 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
           onClose={() => setSelected(null)}
           onPlay={
             player.hand.includes(selected) && !hasPendingForMe && !isBotTurn
-              ? () => { dispatch(playCard(state, viewerId, selected.instanceId)); }
+              ? () => { dispatch(playCard(state, viewerId, selected.instanceId)); setSelected(null); }
               : undefined
           }
           onBuy={

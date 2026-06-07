@@ -73,6 +73,7 @@ export const fr = {
     exhausted: "épuisée",
     used: "UTILISÉ",
     buyBadge: "ACHAT",
+    playBadge: "JOUER",
     waiting: "En attente…",
     handEmpty: "Main vide — terminez le tour pour piocher.",
     noEvents: "Aucun événement.",
