@@ -167,4 +167,4 @@ après ajout des profils bot (PATCH 0021) pour des mesures plus comparables.
 
 ## Hash du commit
 
-À compléter après commit.
+12485ff
