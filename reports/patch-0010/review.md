@@ -161,4 +161,4 @@ Aucune correction de bug (aucun bug bloquant). Modifications uniquement additive
 
 ## Hash du commit
 
-À compléter après commit.
+`8c40b3e`
