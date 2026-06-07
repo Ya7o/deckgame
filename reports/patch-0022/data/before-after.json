@@ -1,0 +1,79 @@
+{
+  "description": "PATCH 0022 — comparaison avant/apres correction formule efficiency",
+  "date": "2026-06-07",
+  "fix": "cardBuyScore: rawScore / cost -> rawScore / Math.sqrt(cost)",
+  "before": {
+    "source": "PATCH 0021 data (100 parties par matchup, seeds 1-100)",
+    "matchups": [
+      {
+        "p1": "balanced",
+        "p2": "balanced",
+        "n": 100,
+        "winRateP1": 0.53,
+        "winRateP2": 0.47,
+        "avgTurns": 30.47
+      },
+      {
+        "p1": "aggressive",
+        "p2": "balanced",
+        "n": 100,
+        "winRateP1": 0.45,
+        "winRateP2": 0.55,
+        "avgTurns": 30.05
+      },
+      {
+        "p1": "economy",
+        "p2": "balanced",
+        "n": 100,
+        "winRateP1": 0.41,
+        "winRateP2": 0.59,
+        "avgTurns": 32.43
+      },
+      {
+        "p1": "defensive",
+        "p2": "balanced",
+        "n": 100,
+        "winRateP1": 0.45,
+        "winRateP2": 0.55,
+        "avgTurns": 32.59
+      }
+    ]
+  },
+  "after": {
+    "source": "PATCH 0022 post-fix (200 parties par matchup, seeds 1-200)",
+    "matchups": [
+      {
+        "p1": "balanced",
+        "p2": "balanced",
+        "n": 200,
+        "winRateP1": 0.535,
+        "winRateP2": 0.465,
+        "avgTurns": 31.1
+      },
+      {
+        "p1": "aggressive",
+        "p2": "balanced",
+        "n": 200,
+        "winRateP1": 0.495,
+        "winRateP2": 0.505,
+        "avgTurns": 29.4
+      },
+      {
+        "p1": "economy",
+        "p2": "balanced",
+        "n": 200,
+        "winRateP1": 0.47,
+        "winRateP2": 0.53,
+        "avgTurns": 32.0
+      },
+      {
+        "p1": "defensive",
+        "p2": "balanced",
+        "n": 200,
+        "winRateP1": 0.45,
+        "winRateP2": 0.55,
+        "avgTurns": 32.2
+      }
+    ]
+  }
+}

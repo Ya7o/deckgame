@@ -118,8 +118,8 @@ export function cardBuyScore(card: CardInstance, profile: BotProfile): number {
     tradeScore * profile.tradeWeight +
     defenseScore * profile.defenseWeight;
 
-  // Normalise par le coût pour comparer l'efficacité
-  return cost > 0 ? rawScore / cost : rawScore;
+  // Normalise par sqrt(coût) : récompense les cartes puissantes sans pénaliser excessivement le prix
+  return cost > 0 ? rawScore / Math.sqrt(cost) : rawScore;
 }
 
 // ---------------------------------------------------------------------------
