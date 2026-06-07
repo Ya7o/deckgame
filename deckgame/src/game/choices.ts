@@ -97,6 +97,9 @@ export function resolveChoice(
       const handIds = new Set(state.players[playerId].hand.map(c => c.instanceId));
       if (payload.cardIds.some(id => !handIds.has(id))) return err(state, "invalid_target");
       if (payload.cardIds.length > amount) return err(state, "invalid_choice");
+      // Minimum obligatoire : defausser min(amount, taille_main) cartes si non optionnel
+      const minRequired = choice.optional ? 0 : Math.min(amount, handIds.size);
+      if (payload.cardIds.length < minRequired) return err(state, "invalid_choice");
       break;
     }
     case "select_ship_to_copy": {

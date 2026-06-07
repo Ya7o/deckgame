@@ -133,6 +133,10 @@ export function setupGame(options: SetupOptions = {}): GameState {
   state = refillTradeRow(state);
 
   // Draw initial hands: P1 draws 3, P2 draws 5
+  // Règle de compensation V0 : le premier joueur pioche 3 cartes au lieu de 5
+  // pour réduire l'avantage du premier tour (P1 obtient le premier accès à la
+  // rangée commerciale et joue ses vipers en premier). Les simulations PATCH 0022
+  // confirment un avantage P1 résiduel de 53-54 %, jugé acceptable pour V0.
   state = drawCards(state, "player_1", 3);
   state = drawCards(state, "player_2", 5);
 

@@ -1022,3 +1022,119 @@ describe("Stealth Needle (PATCH 0006)", () => {
     expect(r2.state.players.player_1.currentCombat).toBeGreaterThan(combatBefore);
   });
 });
+
+// ---------------------------------------------------------------------------
+// PATCH 0024 — Tests de non-régression
+// ---------------------------------------------------------------------------
+
+describe("PATCH 0024 — Dreadnaught effet allié", () => {
+  it("Dreadnaught sans allié Star Empire : pas de +5 combat allié", () => {
+    let s = setupGame();
+    const dreadnaught = mkInstance("dreadnaught", "player_1", "hand");
+    s = {
+      ...s,
+      players: {
+        ...s.players,
+        player_1: {
+          ...s.players.player_1,
+          hand: [dreadnaught],
+          inPlay: [],
+          cardsPlayedThisTurn: [],
+          currentCombat: 0,
+        },
+      },
+    };
+    const r = playCard(s, "player_1", dreadnaught.instanceId);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    // Primary only: +7 combat; aucun allié → pas de +5
+    expect(r.state.players.player_1.currentCombat).toBe(7);
+  });
+
+  it("Dreadnaught avec allié Star Empire en jeu : +5 combat allié déclenché", () => {
+    let s = setupGame();
+    const dreadnaught = mkInstance("dreadnaught", "player_1", "hand");
+    const corvette = mkInstance("corvette", "player_1", "in_play");
+    s = {
+      ...s,
+      players: {
+        ...s.players,
+        player_1: {
+          ...s.players.player_1,
+          hand: [dreadnaught],
+          inPlay: [corvette],
+          cardsPlayedThisTurn: [corvette.instanceId],
+          currentCombat: 0,
+        },
+      },
+    };
+    const r = playCard(s, "player_1", dreadnaught.instanceId);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    // Dreadnaught primary +7; allié star_empire (corvette) → +5 supplémentaires = 12 minimum
+    expect(r.state.players.player_1.currentCombat).toBeGreaterThanOrEqual(12);
+  });
+});
+
+describe("PATCH 0024 — opponent_discard minimum obligatoire", () => {
+  function makeOpponentDiscardState(handCards: ReturnType<typeof mkInstance>[], optional: boolean) {
+    let s = setupGame();
+    const fighter = mkInstance("imperial_fighter", "player_1", "hand");
+    const choice: PendingChoice = {
+      id: "test-opp-discard",
+      type: "opponent_discard",
+      playerId: "player_2",
+      sourceCardInstanceId: fighter.instanceId,
+      amount: 1,
+      optional,
+      candidateIds: handCards.map(c => c.instanceId),
+    };
+    s = {
+      ...s,
+      players: {
+        ...s.players,
+        player_2: { ...s.players.player_2, hand: handCards },
+      },
+      pendingChoices: [choice],
+    };
+    return s;
+  }
+
+  it("sélection vide refusée si main non vide et choice non optionnel", () => {
+    const targetCard = mkInstance("scout", "player_2", "hand");
+    const s = makeOpponentDiscardState([targetCard], false);
+    const r = resolvePendingChoice(s, "player_2", "test-opp-discard", { type: "select_cards", cardIds: [] });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toBe("invalid_choice");
+  });
+
+  it("sélection vide autorisée si main vide (min = 0)", () => {
+    const s = makeOpponentDiscardState([], false);
+    const r = resolvePendingChoice(s, "player_2", "test-opp-discard", { type: "select_cards", cardIds: [] });
+    expect(r.ok).toBe(true);
+  });
+
+  it("sélection vide autorisée si choice optionnel", () => {
+    const targetCard = mkInstance("scout", "player_2", "hand");
+    const s = makeOpponentDiscardState([targetCard], true);
+    const r = resolvePendingChoice(s, "player_2", "test-opp-discard", { type: "select_cards", cardIds: [] });
+    expect(r.ok).toBe(true);
+  });
+
+  it("sélection correcte acceptée et carte défaussée", () => {
+    const targetCard = mkInstance("scout", "player_2", "hand");
+    const s = makeOpponentDiscardState([targetCard], false);
+    const r = resolvePendingChoice(s, "player_2", "test-opp-discard", { type: "select_cards", cardIds: [targetCard.instanceId] });
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.state.players.player_2.discard.some(c => c.instanceId === targetCard.instanceId)).toBe(true);
+  });
+});
+
+describe("PATCH 0024 — Règle P1 draw-3", () => {
+  it("P1 pioche 3 cartes au tour 1 (règle de compensation intentionnelle V0)", () => {
+    const s = setupGame();
+    expect(s.players.player_1.hand.length).toBe(3);
+    expect(s.players.player_2.hand.length).toBe(5);
+  });
+});
