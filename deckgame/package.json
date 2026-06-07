@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "check": "npm run lint && npm test && npm run build",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "sim:batch": "npx tsx src/scripts/sim-batch.ts"
   },
   "dependencies": {
     "react": "^19.2.6",
