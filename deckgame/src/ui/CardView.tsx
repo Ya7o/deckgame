@@ -128,18 +128,18 @@ function summaryEffects(def: ReturnType<typeof getCardDef>): string {
       case "gain_authority": parts.push(`+${e.amount}♥`); break;
       case "draw":           parts.push(`Pioche ${e.amount}`); break;
       case "choose_one":     parts.push("Choix"); break;
-      case "opponent_discard": parts.push("Déf.adv."); break;
+      case "opponent_discard": parts.push("Déf. adv."); break;
       case "scrap_from_hand_or_discard": parts.push("Écart"); break;
       case "scrap_from_hand": parts.push("Écart main"); break;
       case "scrap_trade_row": parts.push("Écart rangée"); break;
-      case "destroy_target_base": parts.push("Détr.base"); break;
+      case "destroy_target_base": parts.push("Détr. base"); break;
       case "copy_another_ship_played_this_turn": parts.push("Copie vais."); break;
       case "counts_as_ally_all_factions": parts.push("Allié ×4"); break;
       case "trigger_on_play_ship_gain_combat": parts.push(`Vais.→+${e.amount}⚔`); break;
       case "next_ship_acquired_to_top_deck": parts.push("Dessus pioche"); break;
-      case "acquire_ship_free_to_top_deck": parts.push("Vais.gratuit"); break;
+      case "acquire_ship_free_to_top_deck": parts.push("Vais. gratuit"); break;
       case "draw_if_two_or_more_bases": parts.push(`Pioche ${e.amount} si 2+bases`); break;
-      case "discard_up_to_then_draw_same": parts.push(`Déf.→P.`); break;
+      case "discard_up_to_then_draw_same": parts.push("Déf.→pioche"); break;
       case "draw_per_blob_played_this_turn": parts.push("P./Blob"); break;
       case "draw_per_card_scrapped_this_way": parts.push("P./écart"); break;
       case "self_scrap": {

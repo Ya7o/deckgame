@@ -300,7 +300,7 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
                         cursor: "pointer",
                         minHeight: "auto",
                       }}
-                    >ACTIV.</button>
+                    >{fr.actions.activateBase}</button>
                   )}
                 </div>
               );

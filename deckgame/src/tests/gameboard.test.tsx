@@ -859,7 +859,7 @@ describe("PATCH 0026 — Flow 7 : Activer une base (badge ACTIV.)", () => {
     );
 
     const buttons = Array.from(container.querySelectorAll("button"));
-    const activBtn = buttons.find(b => b.textContent?.includes("ACTIV."));
+    const activBtn = buttons.find(b => b.textContent?.includes("Activer"));
     expect(activBtn).toBeDefined();
   });
 
@@ -875,7 +875,7 @@ describe("PATCH 0026 — Flow 7 : Activer une base (badge ACTIV.)", () => {
     );
 
     const buttons = Array.from(container.querySelectorAll("button"));
-    const activBtn = buttons.find(b => b.textContent?.includes("ACTIV."));
+    const activBtn = buttons.find(b => b.textContent?.includes("Activer"));
     expect(activBtn).toBeUndefined();
   });
 
@@ -892,7 +892,7 @@ describe("PATCH 0026 — Flow 7 : Activer une base (badge ACTIV.)", () => {
     );
 
     const buttons = Array.from(container.querySelectorAll("button"));
-    const activBtn = buttons.find(b => b.textContent?.includes("ACTIV."));
+    const activBtn = buttons.find(b => b.textContent?.includes("Activer"));
     if (activBtn) {
       fireEvent.click(activBtn);
       expect(spy).toHaveBeenCalledTimes(1);
@@ -916,7 +916,7 @@ describe("PATCH 0026 — Flow 7 : Activer une base (badge ACTIV.)", () => {
     );
 
     const buttons = Array.from(container.querySelectorAll("button"));
-    const activBtn = buttons.find(b => b.textContent?.includes("ACTIV."));
+    const activBtn = buttons.find(b => b.textContent?.includes("Activer"));
     expect(activBtn).toBeUndefined();
   });
 });
@@ -1058,7 +1058,7 @@ describe("PATCH 0033 — QA visuelle mobile post-V0", () => {
       React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
     );
     const activBtn = Array.from(container.querySelectorAll("button"))
-      .find(b => b.textContent?.includes("ACTIV."));
+      .find(b => b.textContent?.includes("Activer"));
     expect(activBtn).toBeDefined();
     // Parent must be a flex-column wrapper (not the card itself)
     const wrapper = activBtn?.parentElement;
@@ -1071,7 +1071,7 @@ describe("PATCH 0033 — QA visuelle mobile post-V0", () => {
       React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
     );
     const activBtn = Array.from(container.querySelectorAll("button"))
-      .find(b => b.textContent?.includes("ACTIV."));
+      .find(b => b.textContent?.includes("Activer"));
     expect(activBtn).toBeUndefined();
   });
 
