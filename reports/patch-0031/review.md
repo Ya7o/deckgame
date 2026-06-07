@@ -66,4 +66,4 @@ TypeScript : 0 erreur
 
 ## Hash du commit
 
-- A remplir après git push
+- 30dea95
