@@ -261,15 +261,24 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
             {player.bases.map((base) => {
               const def = getCardDef(base.definitionId);
               const hasSelfScrap = def.scrapEffects.some(e => e.type === "self_scrap");
+              const canActivate = !base.exhausted && !hasPendingForMe && !isBotTurn;
               return (
                 <div key={base.instanceId} style={{ position: "relative" }}>
                   <CardView
                     card={base}
-                    onClick={() => {
-                      if (!hasPendingForMe && !base.exhausted && !isBotTurn) dispatch(activateBase(state, viewerId, base.instanceId));
-                      else handleCardClick(base);
-                    }}
+                    onClick={() => handleCardClick(base)}
                   />
+                  {canActivate && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); dispatch(activateBase(state, viewerId, base.instanceId)); }}
+                      style={{
+                        position: "absolute", bottom: "3px", left: "50%", transform: "translateX(-50%)",
+                        fontSize: "9px", background: "var(--empire)", color: "#fff",
+                        padding: "0 5px", borderRadius: "3px", fontWeight: "bold",
+                        border: "none", cursor: "pointer", whiteSpace: "nowrap",
+                      }}
+                    >ACTIV.</button>
+                  )}
                   {hasSelfScrap && !hasPendingForMe && !isBotTurn && (
                     <div
                       onClick={(e) => { e.stopPropagation(); dispatch(activateSelfScrap(state, viewerId, base.instanceId)); }}
@@ -420,7 +429,7 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
               : undefined
           }
           onActivate={
-            player.bases.includes(selected) && !hasPendingForMe && !isBotTurn
+            player.bases.includes(selected) && !selected.exhausted && !hasPendingForMe && !isBotTurn
               ? () => { dispatch(activateBase(state, viewerId, selected.instanceId)); }
               : undefined
           }

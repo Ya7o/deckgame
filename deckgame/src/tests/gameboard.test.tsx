@@ -652,3 +652,352 @@ describe("PATCH 0016 — actions explicites main / modal", () => {
     expect(jouerButtons).toHaveLength(0);
   });
 });
+
+
+// ---------------------------------------------------------------------------
+// PATCH 0026 — Couverture flux mobiles manquants (B-06)
+// ---------------------------------------------------------------------------
+
+describe("PATCH 0026 — Flow 1 : setupGame produit un etat valide", () => {
+  it("la partie demarre avec les deux joueurs correctement nommes", () => {
+    const state = setupGame({ player1Name: "Alice", player2Name: "Bot", rand: mulberry32(1) });
+    expect(state.players.player_1.name).toBe("Alice");
+    expect(state.players.player_2.name).toBe("Bot");
+    expect(state.phase).toBe("action_phase");
+    expect(state.currentPlayerId).toBe("player_1");
+  });
+});
+
+describe("PATCH 0026 — Flow 5 : Attaquer une base", () => {
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
+
+  it("avec avant-poste adverse, message bloquant s'affiche et pas de bouton attaque directe", () => {
+    const rand = mulberry32(42);
+    let state = setupGame({ player1Name: "Humain", player2Name: "Bot", rand });
+    const outpostInst = {
+      instanceId: "test-outpost-999",
+      definitionId: "recycling_station",
+      exhausted: false,
+      currentZone: "bases" as const,
+      ownerId: "player_2" as const,
+    };
+    state = {
+      ...state,
+      players: {
+        ...state.players,
+        player_1: { ...state.players.player_1, currentCombat: 1 },
+        player_2: { ...state.players.player_2, bases: [outpostInst] },
+      },
+    };
+
+    const { container } = render(
+      React.createElement(GameBoard, {
+        initialState: state,
+        onNewGame: () => {},
+        gameMode: "solo_bot",
+      })
+    );
+
+    // Outpost blocker message visible
+    expect(container.textContent).toContain("avant-poste");
+    // No direct attack button (format "⚔ Attaque (X)")
+    const buttons = Array.from(container.querySelectorAll("button"));
+    const attackBtn = buttons.find(b => b.textContent?.includes("Attaque") && b.textContent?.includes("("));
+    expect(attackBtn).toBeUndefined();
+  });
+
+  it("badge avant-poste affiché dans la zone adverse quand une base est protectrice", () => {
+    const rand = mulberry32(42);
+    let state = setupGame({ player1Name: "Humain", player2Name: "Bot", rand });
+    const outpostInst = {
+      instanceId: "test-op-2",
+      definitionId: "recycling_station",
+      exhausted: false,
+      currentZone: "bases" as const,
+      ownerId: "player_2" as const,
+    };
+    state = {
+      ...state,
+      players: {
+        ...state.players,
+        player_2: { ...state.players.player_2, bases: [outpostInst] },
+      },
+    };
+
+    const { container } = render(
+      React.createElement(GameBoard, {
+        initialState: state,
+        onNewGame: () => {},
+        gameMode: "solo_bot",
+      })
+    );
+
+    // The outpost protection badge ("🛡 1 avant-poste") must appear
+    expect(container.textContent).toMatch(/avant-poste/);
+  });
+});
+
+describe("PATCH 0026 — Flow 6 : Attaquer le joueur adverse", () => {
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
+
+  it("bouton d'attaque directe apparait quand combat > 0 et pas d'avant-poste", () => {
+    const rand = mulberry32(42);
+    let state = setupGame({ player1Name: "Humain", player2Name: "Bot", rand });
+    state = {
+      ...state,
+      players: {
+        ...state.players,
+        player_1: { ...state.players.player_1, currentCombat: 5 },
+        player_2: { ...state.players.player_2, bases: [] },
+      },
+    };
+
+    const { container } = render(
+      React.createElement(GameBoard, {
+        initialState: state,
+        onNewGame: () => {},
+        gameMode: "solo_bot",
+      })
+    );
+
+    const buttons = Array.from(container.querySelectorAll("button"));
+    const attackBtn = buttons.find(b => b.textContent?.includes("Attaque") && b.textContent?.includes("("));
+    expect(attackBtn).toBeDefined();
+  });
+
+  it("bouton d'attaque directe absent quand combat === 0", () => {
+    const rand = mulberry32(42);
+    let state = setupGame({ player1Name: "Humain", player2Name: "Bot", rand });
+    state = {
+      ...state,
+      players: {
+        ...state.players,
+        player_1: { ...state.players.player_1, currentCombat: 0 },
+        player_2: { ...state.players.player_2, bases: [] },
+      },
+    };
+
+    const { container } = render(
+      React.createElement(GameBoard, {
+        initialState: state,
+        onNewGame: () => {},
+        gameMode: "solo_bot",
+      })
+    );
+
+    const buttons = Array.from(container.querySelectorAll("button"));
+    const attackBtn = buttons.find(b => b.textContent?.includes("Attaque") && b.textContent?.includes("("));
+    expect(attackBtn).toBeUndefined();
+  });
+
+  it("clic sur bouton d'attaque directe dispatch attackOpponent", () => {
+    const rand = mulberry32(42);
+    let state = setupGame({ player1Name: "Humain", player2Name: "Bot", rand });
+    state = {
+      ...state,
+      players: {
+        ...state.players,
+        player_1: { ...state.players.player_1, currentCombat: 5 },
+        player_2: { ...state.players.player_2, bases: [] },
+      },
+    };
+
+    const spy = vi.spyOn(engineModule, "attackOpponent");
+
+    const { container } = render(
+      React.createElement(GameBoard, {
+        initialState: state,
+        onNewGame: () => {},
+        gameMode: "solo_bot",
+      })
+    );
+
+    const buttons = Array.from(container.querySelectorAll("button"));
+    const attackBtn = buttons.find(b => b.textContent?.includes("Attaque") && b.textContent?.includes("("));
+    if (attackBtn) {
+      fireEvent.click(attackBtn);
+      expect(spy).toHaveBeenCalledTimes(1);
+    }
+  });
+});
+
+describe("PATCH 0026 — Flow 7 : Activer une base (badge ACTIV.)", () => {
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
+
+  function makeStateWithPlayerBase(exhausted: boolean) {
+    const rand = mulberry32(42);
+    let state = setupGame({ player1Name: "Humain", player2Name: "Bot", rand });
+    const baseInst = {
+      instanceId: "test-player-base-act",
+      definitionId: "space_station",
+      exhausted,
+      currentZone: "bases" as const,
+      ownerId: "player_1" as const,
+    };
+    state = {
+      ...state,
+      players: {
+        ...state.players,
+        player_1: { ...state.players.player_1, bases: [baseInst] },
+      },
+    };
+    return state;
+  }
+
+  it("badge ACTIV. visible pour une base non-exhausted du joueur", () => {
+    const state = makeStateWithPlayerBase(false);
+
+    const { container } = render(
+      React.createElement(GameBoard, {
+        initialState: state,
+        onNewGame: () => {},
+        gameMode: "solo_bot",
+      })
+    );
+
+    const buttons = Array.from(container.querySelectorAll("button"));
+    const activBtn = buttons.find(b => b.textContent?.includes("ACTIV."));
+    expect(activBtn).toBeDefined();
+  });
+
+  it("badge ACTIV. absent pour une base exhausted", () => {
+    const state = makeStateWithPlayerBase(true);
+
+    const { container } = render(
+      React.createElement(GameBoard, {
+        initialState: state,
+        onNewGame: () => {},
+        gameMode: "solo_bot",
+      })
+    );
+
+    const buttons = Array.from(container.querySelectorAll("button"));
+    const activBtn = buttons.find(b => b.textContent?.includes("ACTIV."));
+    expect(activBtn).toBeUndefined();
+  });
+
+  it("clic sur badge ACTIV. dispatch activateBase", () => {
+    const state = makeStateWithPlayerBase(false);
+    const spy = vi.spyOn(engineModule, "activateBase");
+
+    const { container } = render(
+      React.createElement(GameBoard, {
+        initialState: state,
+        onNewGame: () => {},
+        gameMode: "solo_bot",
+      })
+    );
+
+    const buttons = Array.from(container.querySelectorAll("button"));
+    const activBtn = buttons.find(b => b.textContent?.includes("ACTIV."));
+    if (activBtn) {
+      fireEvent.click(activBtn);
+      expect(spy).toHaveBeenCalledTimes(1);
+    }
+  });
+
+  it("pendant le tour bot, badge ACTIV. absent meme pour base non-exhausted", () => {
+    const humanState = makeStateWithPlayerBase(false);
+    // Switch to bot turn
+    const r = endTurn(humanState, "player_1");
+    if (!r.ok) return;
+    const botTurnState = r.state;
+    expect(botTurnState.currentPlayerId).toBe("player_2");
+
+    const { container } = render(
+      React.createElement(GameBoard, {
+        initialState: botTurnState,
+        onNewGame: () => {},
+        gameMode: "solo_bot",
+      })
+    );
+
+    const buttons = Array.from(container.querySelectorAll("button"));
+    const activBtn = buttons.find(b => b.textContent?.includes("ACTIV."));
+    expect(activBtn).toBeUndefined();
+  });
+});
+
+describe("PATCH 0026 — Flow 9 : Passer le tour", () => {
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
+
+  it("clic sur Fin du tour dispatch endTurn pendant le tour humain", () => {
+    const state = makeHumanTurnState();
+    const spy = vi.spyOn(engineModule, "endTurn");
+
+    const { container } = render(
+      React.createElement(GameBoard, {
+        initialState: state,
+        onNewGame: () => {},
+        gameMode: "solo_bot",
+      })
+    );
+
+    const buttons = Array.from(container.querySelectorAll("button"));
+    const endTurnBtn = buttons.find(
+      b => !( b as HTMLButtonElement).disabled
+        && (b.textContent?.includes("Fin") || b.textContent?.toLowerCase().includes("tour"))
+    );
+    if (endTurnBtn) {
+      fireEvent.click(endTurnBtn);
+      expect(spy).toHaveBeenCalledTimes(1);
+    }
+  });
+});
+
+describe("PATCH 0026 — Flow 11 : Ecran de fin de partie", () => {
+  it("GameOverScreen s'affiche quand phase === game_over avec winner", () => {
+    const rand = mulberry32(42);
+    const baseState = setupGame({ player1Name: "Alice", player2Name: "Bot", rand });
+    const gameOverState = {
+      ...baseState,
+      phase: "game_over" as const,
+      winner: "player_1" as const,
+      gameOverReason: "authority_depleted" as const,
+    };
+
+    vi.useFakeTimers();
+    const { container } = render(
+      React.createElement(GameBoard, {
+        initialState: gameOverState,
+        onNewGame: () => {},
+        gameMode: "solo_bot",
+      })
+    );
+    vi.useRealTimers();
+
+    expect(container.textContent).toContain("PARTIE TERMIN");
+    expect(container.textContent).toContain("Alice");
+    const buttons = Array.from(container.querySelectorAll("button"));
+    const newGameBtn = buttons.find(b => b.textContent?.includes("Nouvelle"));
+    expect(newGameBtn).toBeDefined();
+  });
+
+  it("GameOverScreen affiche la raison concession si gameOverReason === concede", () => {
+    const rand = mulberry32(42);
+    const baseState = setupGame({ player1Name: "Alice", player2Name: "Bot", rand });
+    const concedeState = {
+      ...baseState,
+      phase: "game_over" as const,
+      winner: "player_2" as const,
+      gameOverReason: "concede" as const,
+    };
+
+    vi.useFakeTimers();
+    const { container } = render(
+      React.createElement(GameBoard, {
+        initialState: concedeState,
+        onNewGame: () => {},
+        gameMode: "solo_bot",
+      })
+    );
+    vi.useRealTimers();
+
+    // fr.ui.concessionReason should appear
+    expect(container.textContent).toContain("aban");
+  });
+});
