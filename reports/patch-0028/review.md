@@ -101,4 +101,4 @@ La V0 est prête pour le tag. Procéder directement à PATCH 0030.
 
 ## 5. Hash du commit
 
-- A remplir après git push
+- 9ee53c1

@@ -62,7 +62,7 @@ bot) et un mode 2 joueurs local sur mobile.
 | 0014 | Séparation zoom / achat (mobile) |
 | 0015 | Choix bot auto-résolu / main bot masquée |
 | 0016 | Actions explicites main / modal |
-| 0017 | Cartes avancées (Fleet HQ, Aiguille Furtive…) |
+| 0017 | QA mobile automatisée (Playwright prévu, substitution Preview MCP) |
 | 0018 | Audit qualité — identification backlog B-01/B-15 |
 | 0019 | Simulation batch |
 | 0020 | Tests d'équilibrage baseline |

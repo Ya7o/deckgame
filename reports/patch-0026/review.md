@@ -104,4 +104,4 @@ Items restants : B-07 à B-15 (PATCH 0027).
 
 ## Hash du commit
 
-- A remplir après git push
+- b8d3329

@@ -4,7 +4,7 @@ Prototype jouable de Star Realms (set de base) en React + TypeScript.
 
 ## Stack technique
 
-- **Frontend** : React 18 + TypeScript + Vite
+- **Frontend** : React 19 + TypeScript + Vite
 - **Tests** : Vitest + Testing Library
 - **Moteur de jeu** : pur TypeScript, immuable (pas de mutation d'état)
 
@@ -57,6 +57,10 @@ src/
 - Pile Explorateur initialisée à 16 instances (limite pratique V0)
 - Reshuffles déterministes si `rand` fourni à `setupGame`
 
+## Version stable
+
+Tag **v0.0.0** sur master — release candidate validée (200 parties, 0 erreur moteur).
+
 ## Historique des patchs
 
 - PATCH 0001–0022 : implémentation du moteur et de l'UI
@@ -65,4 +69,6 @@ src/
 - PATCH 0025 : durcissement QA (190 tests, batch 100 parties)
 - PATCH 0026 : stabilisation UX mobile (badge ACTIV., 11 flux vérifiés)
 - PATCH 0027 : cleanup V0 (dette B-07–B-15, README)
-- PATCH 0028 : release candidate V0 (prévu)
+- PATCH 0028 : release candidate V0 (terminé)
+- PATCH 0029 : skipped (aucun bloquant RC)
+- PATCH 0030 : tag v0.0.0 + documentation finale
