@@ -95,4 +95,4 @@ Le moteur est inchangé. Le bot est une couche au-dessus des actions publiques.
 - La bannière "Le Bot réfléchit…" apparaît 600 ms avant que le tour s'exécute.
 
 ## Hash du commit
-À compléter après commit.
+`1b84c09`

@@ -314,3 +314,128 @@ describe("runBotTurn — résolution de choix", () => {
     expect(p2Cards.some(c => c.definitionId === "battle_blob")).toBe(true);
   });
 });
+
+
+// ---------------------------------------------------------------------------
+// PATCH 0010 — Smoke tests jouabilite solo (humain vs bot)
+// ---------------------------------------------------------------------------
+
+import { playCard, resolvePendingChoice } from "../game/engine";
+import type { ChoicePayload } from "../game/choices";
+import { validateStateInvariants } from "../game/validators";
+
+/** Simule le tour complet du joueur humain (player_1). */
+function humanTurn(initial: GameState): GameState {
+  let s = initial;
+  for (let steps = 0; steps < 100; steps++) {
+    const myChoice = s.pendingChoices.find(c => c.playerId === "player_1");
+    if (myChoice) {
+      let payload: ChoicePayload;
+      if (myChoice.optional) {
+        payload = { type: "skip" };
+      } else if (myChoice.type === "choose_one") {
+        payload = { type: "choose_one", optionIndex: 0 };
+      } else {
+        payload = { type: "select_cards", cardIds: myChoice.candidateIds?.slice(0, myChoice.amount ?? 1) ?? [] };
+      }
+      const r = resolvePendingChoice(s, "player_1", myChoice.id, payload);
+      if (r.ok) { s = r.state; continue; }
+    }
+    const noPending = !s.pendingChoices.some(c => c.playerId === "player_1");
+    if (s.players.player_1.hand.length > 0 && noPending) {
+      const card = s.players.player_1.hand[0];
+      const r = playCard(s, "player_1", card.instanceId);
+      if (r.ok) { s = r.state; continue; }
+    }
+    const r = endTurn(s, "player_1");
+    if (r.ok) s = r.state;
+    break;
+  }
+  return s;
+}
+
+describe("smoke test â jouabilite solo humain vs bot (PATCH 0010)", () => {
+  it("les invariants tiennent a chaque tour et la partie se termine", () => {
+    let state = setupGame({ player1Name: "Humain", player2Name: "Bot" });
+    let turns = 0;
+    const MAX_TURNS = 200;
+
+    while (state.phase !== "game_over" && turns < MAX_TURNS) {
+      turns++;
+      expect(validateStateInvariants(state)).toEqual([]);
+
+      if (state.currentPlayerId === "player_1") {
+        state = humanTurn(state);
+      } else {
+        const result = runBotTurn(state, "player_2");
+        expect(result.ok).toBe(true);
+        state = result.state;
+      }
+    }
+
+    if (state.phase === "game_over") {
+      expect(state.winner).not.toBeNull();
+      expect(validateStateInvariants(state)).toEqual([]);
+    } else {
+      expect(turns).toBeLessThan(MAX_TURNS);
+    }
+  });
+
+  it("le bot rend la main au joueur humain apres son tour (3 cycles)", () => {
+    let state = setupGame({ player1Name: "Humain", player2Name: "Bot" });
+
+    for (let i = 0; i < 3 && state.phase !== "game_over"; i++) {
+      expect(state.currentPlayerId).toBe("player_1");
+      state = humanTurn(state);
+      if (state.phase === "game_over") break;
+
+      expect(state.currentPlayerId).toBe("player_2");
+      const result = runBotTurn(state, "player_2");
+      expect(result.ok).toBe(true);
+      state = result.state;
+
+      if (state.phase !== "game_over") {
+        expect(state.currentPlayerId).toBe("player_1");
+      }
+    }
+  });
+
+  it("MAX_BOT_ACTIONS_PER_TURN protege contre les boucles infinies", () => {
+    let state = setupGame({ player1Name: "Humain", player2Name: "Bot" });
+    const r0 = endTurn(state, "player_1");
+    expect(r0.ok).toBe(true);
+    if (!r0.ok) return;
+    state = {
+      ...r0.state,
+      players: {
+        ...r0.state.players,
+        player_2: { ...r0.state.players.player_2, currentTrade: 100, currentCombat: 200 },
+      },
+    };
+    const result = runBotTurn(state, "player_2");
+    expect(result.ok).toBe(true);
+    expect(result.actions.length).toBeLessThanOrEqual(MAX_BOT_ACTIONS_PER_TURN);
+    expect(validateStateInvariants(result.state)).toEqual([]);
+  });
+
+  it("partie complete bot vs bot atteint game_over proprement", () => {
+    let state = setupGame({ player1Name: "BotA", player2Name: "BotB" });
+    let turns = 0;
+    const MAX_TURNS = 300;
+
+    while (state.phase !== "game_over" && turns < MAX_TURNS) {
+      turns++;
+      const pid = state.currentPlayerId;
+      const result = runBotTurn(state, pid);
+      expect(result.ok).toBe(true);
+      state = result.state;
+    }
+
+    if (state.phase === "game_over") {
+      expect(state.winner).not.toBeNull();
+      expect(validateStateInvariants(state)).toEqual([]);
+    } else {
+      expect(turns).toBeLessThan(MAX_TURNS);
+    }
+  });
+});
