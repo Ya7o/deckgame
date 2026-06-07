@@ -164,4 +164,4 @@ Répertoire : `reports/patch-0011/screenshots/` (vide, captures à effectuer man
 
 ## Hash du commit
 
-À compléter après commit.
+`20f28f9`
