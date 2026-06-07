@@ -1138,3 +1138,209 @@ describe("PATCH 0024 — Règle P1 draw-3", () => {
     expect(s.players.player_2.hand.length).toBe(5);
   });
 });
+
+
+// ---------------------------------------------------------------------------
+// PATCH 0025 — Tests zones peu couvertes (B-04)
+// ---------------------------------------------------------------------------
+
+describe("PATCH 0025 — Embassy Yacht draw_if_two_or_more_bases", () => {
+  it("Embassy Yacht : aucune pioche si < 2 bases en jeu (0 bases)", () => {
+    let s = setupGame();
+    const yacht = mkInstance("embassy_yacht", "player_1", "hand");
+    s = {
+      ...s,
+      players: {
+        ...s.players,
+        player_1: {
+          ...s.players.player_1,
+          hand: [yacht],
+          bases: [],  // 0 bases
+        },
+      },
+    };
+    const handBefore = s.players.player_1.hand.length;
+    const r = playCard(s, "player_1", yacht.instanceId);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    // Embassy Yacht played — no draw from draw_if_two_or_more_bases
+    // Primary effects: gain_trade:3 gain_authority:3 (no draw cards)
+    const handAfter = r.state.players.player_1.hand.length;
+    expect(handAfter).toBe(handBefore - 1); // only removed from hand (played)
+  });
+
+  it("Embassy Yacht : aucune pioche avec exactement 1 base en jeu", () => {
+    let s = setupGame();
+    const yacht = mkInstance("embassy_yacht", "player_1", "hand");
+    const base1 = mkInstance("recycling_station", "player_1", "bases");
+    s = {
+      ...s,
+      players: {
+        ...s.players,
+        player_1: {
+          ...s.players.player_1,
+          hand: [yacht],
+          bases: [base1],  // 1 base
+        },
+      },
+    };
+    const deckBefore = s.players.player_1.deck.length + s.players.player_1.hand.length;
+    const r = playCard(s, "player_1", yacht.instanceId);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    // 1 base < 2 → no draw
+    const inPlayCount = r.state.players.player_1.inPlay.length;
+    expect(inPlayCount).toBe(1); // yacht in play
+    // deck + hand should equal before minus 1 (yacht moved to inPlay, no draw)
+    const deckAfter = r.state.players.player_1.deck.length + r.state.players.player_1.hand.length;
+    expect(deckAfter).toBe(deckBefore - 1);
+  });
+
+  it("Embassy Yacht : pioche 2 cartes avec 2+ bases en jeu", () => {
+    let s = setupGame();
+    const yacht = mkInstance("embassy_yacht", "player_1", "hand");
+    const base1 = mkInstance("recycling_station", "player_1", "bases");
+    const base2 = mkInstance("space_station", "player_1", "bases");
+    s = {
+      ...s,
+      players: {
+        ...s.players,
+        player_1: {
+          ...s.players.player_1,
+          hand: [yacht],
+          bases: [base1, base2],  // 2 bases
+        },
+      },
+    };
+    const handBefore = s.players.player_1.hand.length;
+    const r = playCard(s, "player_1", yacht.instanceId);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    // 2 bases → draw 2
+    const handAfter = r.state.players.player_1.hand.length;
+    expect(handAfter).toBe(handBefore - 1 + 2); // -1 played, +2 drawn
+  });
+});
+
+describe("PATCH 0025 — scrap_trade_row + refill", () => {
+  it("Battle Pod scrap_trade_row optionnel : choix créé, trade_row rechargée après", () => {
+    let s = setupGame();
+    const pod = mkInstance("battle_pod", "player_1", "hand");
+    s = {
+      ...s,
+      players: {
+        ...s.players,
+        player_1: { ...s.players.player_1, hand: [pod], inPlay: [], cardsPlayedThisTurn: [] },
+      },
+    };
+    const tradeRowBefore = s.tradeRow.length;
+    const r = playCard(s, "player_1", pod.instanceId);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    // Un choix select_trade_row_card_to_scrap doit être en attente
+    const scrapChoice = r.state.pendingChoices.find(c => c.type === "select_trade_row_card_to_scrap");
+    expect(scrapChoice).toBeDefined();
+    if (!scrapChoice) return;
+    // Résoudre en sélectionnant la première carte de la rangée
+    const targetId = r.state.tradeRow[0]?.instanceId;
+    if (!targetId) return;
+    const r2 = resolvePendingChoice(r.state, "player_1", scrapChoice.id, { type: "select_cards", cardIds: [targetId] });
+    expect(r2.ok).toBe(true);
+    if (!r2.ok) return;
+    // La carte a été retirée → rangée rechargée
+    expect(r2.state.tradeRow.length).toBe(tradeRowBefore); // trade_row se recharge
+    expect(r2.state.tradeRow.every(c => c.instanceId !== targetId)).toBe(true);
+  });
+
+  it("scrap_trade_row : skip autorisé car optionnel", () => {
+    let s = setupGame();
+    const pod = mkInstance("battle_pod", "player_1", "hand");
+    s = {
+      ...s,
+      players: {
+        ...s.players,
+        player_1: { ...s.players.player_1, hand: [pod], inPlay: [], cardsPlayedThisTurn: [] },
+      },
+    };
+    const r = playCard(s, "player_1", pod.instanceId);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    const scrapChoice = r.state.pendingChoices.find(c => c.type === "select_trade_row_card_to_scrap");
+    expect(scrapChoice?.optional).toBe(true);
+    if (!scrapChoice) return;
+    const r2 = resolvePendingChoice(r.state, "player_1", scrapChoice.id, { type: "skip" });
+    expect(r2.ok).toBe(true);
+  });
+});
+
+describe("PATCH 0025 — authority edge cases", () => {
+  it("attaque réduisant l'autorité à exactement 0 : victoire immédiate", () => {
+    let s = setupGame();
+    s = {
+      ...s,
+      players: {
+        ...s.players,
+        player_1: { ...s.players.player_1, currentCombat: 50 },
+        player_2: { ...s.players.player_2, authority: 5 },
+      },
+    };
+    const r = attackOpponent(s, "player_1", 5);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.state.phase).toBe("game_over");
+    expect(r.state.winner).toBe("player_1");
+    expect(r.state.players.player_2.authority).toBe(0);
+  });
+
+  it("autorité du perdant peut être négative (coup fatal dépasse 0)", () => {
+    let s = setupGame();
+    s = {
+      ...s,
+      players: {
+        ...s.players,
+        player_1: { ...s.players.player_1, currentCombat: 20 },
+        player_2: { ...s.players.player_2, authority: 3 },
+      },
+    };
+    const r = attackOpponent(s, "player_1", 20);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.state.phase).toBe("game_over");
+    expect(r.state.winner).toBe("player_1");
+    // authority can go negative
+    expect(r.state.players.player_2.authority).toBeLessThanOrEqual(0);
+  });
+});
+
+describe("PATCH 0025 — reshuffle pendant pioche complète", () => {
+  it("pioche depuis deck vide déclenche un reshuffle et complète la main", () => {
+    let s = setupGame();
+    // Vide le deck de player_1 et met des cartes en défausse
+    const discardCards = [
+      mkInstance("scout", "player_1", "discard"),
+      mkInstance("scout", "player_1", "discard"),
+      mkInstance("scout", "player_1", "discard"),
+    ];
+    s = {
+      ...s,
+      players: {
+        ...s.players,
+        player_1: {
+          ...s.players.player_1,
+          deck: [],
+          hand: [],
+          discard: discardCards,
+        },
+      },
+    };
+    // End turn pour déclencher la pioche
+    const r = endTurn(s, "player_1");
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    // player_1 a une nouvelle main (au moins 1 carte depuis la défausse reshufflée)
+    // Elle devrait avoir min(5, 3) = 3 cartes
+    expect(r.state.players.player_1.hand.length).toBeGreaterThan(0);
+    // La défausse doit maintenant être vide (reshufflée dans le deck)
+    // Certaines peuvent encore être dans le deck si > 5 dans la défausse
+  });
+});

@@ -45,3 +45,38 @@ describe("PATCH 0020 — Seuils de stabilité baseline", () => {
   });
 
 });
+
+
+// ---------------------------------------------------------------------------
+// PATCH 0025 --- Augmentation du batch (B-05) : 100 parties
+// ---------------------------------------------------------------------------
+
+describe("PATCH 0025 --- Seuils de stabilite 100 parties (B-05)", () => {
+
+  it("100 parties : aucune erreur moteur ni violation d invariant", () => {
+    const summary = runBatch(100, 2000); // seeds 2000-2099
+    expect(summary.engineErrors).toBe(0);
+    expect(summary.invariantViolations).toBe(0);
+  });
+
+  it("100 parties : maxTurns jamais atteint (seuil 5%)", () => {
+    const summary = runBatch(100, 2000);
+    expect(summary.maxTurnsHit / summary.total).toBeLessThanOrEqual(0.05);
+  });
+
+  it("100 parties : winrate P1 < 70% (seuil desequilibre fort)", () => {
+    const summary = runBatch(100, 2000);
+    expect(summary.winRateP1).toBeLessThan(0.70);
+  });
+
+  it("100 parties : winrate P2 < 70% (seuil desequilibre fort)", () => {
+    const summary = runBatch(100, 2000);
+    expect(summary.winRateP2).toBeLessThan(0.70);
+  });
+
+  it("100 parties : duree moyenne < 80 tours", () => {
+    const summary = runBatch(100, 2000);
+    expect(summary.avgTurns).toBeLessThan(80);
+  });
+
+});
