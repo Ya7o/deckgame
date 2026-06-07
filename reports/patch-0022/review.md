@@ -155,4 +155,4 @@ Build :  OK (dist/index.js 264 kB)
 
 ## Hash du commit
 
-- A remplir apres git push
+- 24bee09eaf7480a11069fb51b9bf57ae1b8fc0f7 (PATCH 0022)
