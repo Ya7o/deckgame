@@ -309,3 +309,156 @@ describe("GameBoard — séparation zoom et achat (PATCH 0014)", () => {
     expect(spy).not.toHaveBeenCalled();
   });
 });
+
+
+// ---------------------------------------------------------------------------
+// PATCH 0015 — Choix bot auto-résolu / main bot masquée / modal achat
+// ---------------------------------------------------------------------------
+
+describe("PATCH 0015 — choix bot, main bot, modal achat", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it("un choix opponent_discard pour player_2 n'est pas affiché par PendingChoicePanel", () => {
+    // Simulate: human played a card forcing the bot to discard
+    const state = setupGame({ player1Name: "Humain", player2Name: "Bot", rand: mulberry32(42) });
+    const stateWithBotChoice = {
+      ...state,
+      pendingChoices: [
+        {
+          id: "bot-discard-choice",
+          type: "opponent_discard" as const,
+          playerId: "player_2" as const,
+          sourceCardInstanceId: "",
+          optional: false as const,
+          candidateIds: state.players.player_2.hand.map((c) => c.instanceId),
+          amount: 1,
+        },
+      ],
+    };
+
+    const { container } = render(
+      React.createElement(GameBoard, {
+        initialState: stateWithBotChoice,
+        onNewGame: () => {},
+        gameMode: "solo_bot",
+      })
+    );
+
+    // The choice label for opponent_discard should NOT appear (it's for player_2)
+    expect(container.textContent).not.toContain("adversaire défausse");
+    // No fixed-position overlay from PendingChoicePanel
+    const fixedOverlay = container.querySelector('[style*="position: fixed"]');
+    expect(fixedOverlay).toBeNull();
+  });
+
+  it("un choix opponent_discard pour player_1 est bien affiché par PendingChoicePanel", () => {
+    // Simulate: bot played a card forcing the human to discard
+    const state = setupGame({ player1Name: "Humain", player2Name: "Bot", rand: mulberry32(42) });
+    // Give player_1 some hand cards to discard
+    expect(state.players.player_1.hand.length).toBeGreaterThan(0);
+
+    const stateWithHumanChoice = {
+      ...state,
+      pendingChoices: [
+        {
+          id: "human-discard-choice",
+          type: "opponent_discard" as const,
+          playerId: "player_1" as const,
+          sourceCardInstanceId: "",
+          optional: false as const,
+          candidateIds: state.players.player_1.hand.map((c) => c.instanceId),
+          amount: 1,
+        },
+      ],
+    };
+
+    const { container } = render(
+      React.createElement(GameBoard, {
+        initialState: stateWithHumanChoice,
+        onNewGame: () => {},
+        gameMode: "solo_bot",
+      })
+    );
+
+    // The choice label for opponent_discard MUST appear (it's for player_1)
+    expect(container.textContent).toContain("adversaire défausse");
+  });
+
+  it("le bouton Acheter en modale n'est pas affiché si le commerce est insuffisant", () => {
+    // Player_1 has 0 trade — should not see Acheter button in modal
+    const rand = mulberry32(42);
+    const state = setupGame({ player1Name: "Humain", player2Name: "Bot", rand });
+    expect(state.players.player_1.currentTrade).toBe(0);
+    expect(state.tradeRow.length).toBeGreaterThan(0);
+
+    const { container } = render(
+      React.createElement(GameBoard, {
+        initialState: state,
+        onNewGame: () => {},
+        gameMode: "solo_bot",
+      })
+    );
+
+    // Click on a trade row card to open the modal
+    const cardElements = container.querySelectorAll("[style*='var(--card-w)']");
+    // Click the first card that is NOT a button (card body)
+    for (const el of Array.from(cardElements)) {
+      if (el.tagName !== "BUTTON") {
+        fireEvent.click(el);
+        break;
+      }
+    }
+
+    // The modal "Acheter" button should NOT be visible (cost > 0 trade)
+    const buttons = Array.from(container.querySelectorAll("button"));
+    const achetBtn = buttons.find(
+      (b) => b.textContent?.startsWith("Acheter") || b.textContent?.includes("Acheter (")
+    );
+    expect(achetBtn).toBeUndefined();
+  });
+
+  it("le bouton Acheter en modale est affiché si le commerce est suffisant", () => {
+    const rand = mulberry32(42);
+    const state = setupGame({ player1Name: "Humain", player2Name: "Bot", rand });
+    expect(state.tradeRow.length).toBeGreaterThan(0);
+
+    // Give player_1 enough trade for anything
+    const richState = {
+      ...state,
+      players: {
+        ...state.players,
+        player_1: { ...state.players.player_1, currentTrade: 10 },
+      },
+    };
+
+    const { container } = render(
+      React.createElement(GameBoard, {
+        initialState: richState,
+        onNewGame: () => {},
+        gameMode: "solo_bot",
+      })
+    );
+
+    // Click on a trade row card body to open modal
+    const cardElements = container.querySelectorAll("[style*='var(--card-w)']");
+    for (const el of Array.from(cardElements)) {
+      if (el.tagName !== "BUTTON") {
+        fireEvent.click(el);
+        break;
+      }
+    }
+
+    // The modal "Acheter" button should appear (sufficient trade)
+    const buttons = Array.from(container.querySelectorAll("button"));
+    const achetBtn = buttons.find(
+      (b) => b.textContent?.startsWith("Acheter") || b.textContent?.includes("Acheter (")
+    );
+    expect(achetBtn).toBeDefined();
+  });
+});

@@ -402,7 +402,9 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
               : undefined
           }
           onBuy={
-            state.tradeRow.includes(selected) && !hasPendingForMe && !isBotTurn
+            state.tradeRow.includes(selected)
+              && player.currentTrade >= (getCardDef(selected.definitionId).cost ?? 999)
+              && !hasPendingForMe && !isBotTurn
               ? () => { dispatch(buyTradeRowCard(state, viewerId, selected.instanceId)); setSelected(null); }
               : state.explorerPile.includes(selected) && player.currentTrade >= 2 && !hasPendingForMe && !isBotTurn
               ? () => { dispatch(buyExplorer(state, viewerId)); setSelected(null); }

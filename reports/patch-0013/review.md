@@ -183,12 +183,13 @@ build  : PASS — dist/index.js 261 kB / 75.4 kB gzip
 - **Reshuffles en cours de partie** non déterministes (draw.ts) — hors scope.
 - **Captures mobiles automatiques** impossibles depuis WSL sans serveur d'affichage.
 - **Tests UI complets** (drag-and-drop, animations) non couverts.
-- **PATCH 0014** (en file d'attente) : résoudre les pending choices bot automatiquement
+- **PATCH 0015** (en file d'attente) : résoudre les pending choices bot automatiquement
   et masquer la main du bot dans les modales de choix adverse.
+  (Note : PATCH 0014 a finalement traité la séparation zoom/achat mobile.)
 
 ---
 
-## 11. Recommandations PATCH 0014
+## 11. Recommandations PATCH 0015
 
 1. Résoudre automatiquement les `pendingChoices` du bot dans `runBotTurn`.
 2. Masquer les cartes bot dans `PendingChoicePanel` quand `viewerId = player_1`.
