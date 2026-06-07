@@ -171,18 +171,18 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
                   <CardView
                     card={card}
                     dimmed={!canBuy}
-                    onClick={() => {
-                      if (canBuy && !hasPendingForMe && !isBotTurn) dispatch(buyTradeRowCard(state, viewerId, card.instanceId));
-                      else handleCardClick(card);
-                    }}
+                    onClick={() => handleCardClick(card)}
                   />
-                  {canBuy && (
-                    <div style={{
-                      position: "absolute", bottom: "3px", left: "50%", transform: "translateX(-50%)",
-                      fontSize: "9px", background: "var(--trade)", color: "#000",
-                      padding: "0 5px", borderRadius: "3px", fontWeight: "bold",
-                      whiteSpace: "nowrap",
-                    }}>{fr.ui.buyBadge}</div>
+                  {canBuy && !hasPendingForMe && !isBotTurn && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); dispatch(buyTradeRowCard(state, viewerId, card.instanceId)); }}
+                      style={{
+                        position: "absolute", bottom: "3px", left: "50%", transform: "translateX(-50%)",
+                        fontSize: "9px", background: "var(--trade)", color: "#000",
+                        padding: "0 5px", borderRadius: "3px", fontWeight: "bold",
+                        border: "none", cursor: "pointer", whiteSpace: "nowrap",
+                      }}
+                    >{fr.ui.buyBadge}</button>
                   )}
                 </div>
               );
@@ -196,26 +196,28 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
                   borderRadius: "var(--radius)",
                   background: "var(--surface2)",
                   display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                  cursor: player.currentTrade >= 2 && !hasPendingForMe && !isBotTurn ? "pointer" : "default",
+                  cursor: "pointer",
                   opacity: player.currentTrade >= 2 ? 1 : 0.4,
                   fontSize: "10px", gap: "5px",
                   flexShrink: 0,
                   transition: "opacity 0.1s, border-color 0.1s",
                 }}
-                  onClick={() => {
-                    if (player.currentTrade >= 2 && !hasPendingForMe && !isBotTurn) dispatch(buyExplorer(state, viewerId));
-                  }}
+                  onClick={() => handleCardClick(state.explorerPile[0])}
                 >
                   <div style={{ color: "var(--trade)", fontWeight: "bold", fontSize: "12px" }}>2</div>
                   <div style={{ fontWeight: "bold" }}>{fr.cardNames.explorer}</div>
                   <div style={{ color: "var(--text-muted)", fontSize: "9px" }}>×{state.explorerPile.length}</div>
                 </div>
-                {player.currentTrade >= 2 && (
-                  <div style={{
-                    position: "absolute", bottom: "3px", left: "50%", transform: "translateX(-50%)",
-                    fontSize: "9px", background: "var(--trade)", color: "#000",
-                    padding: "0 5px", borderRadius: "3px", fontWeight: "bold",
-                  }}>{fr.ui.buyBadge}</div>
+                {player.currentTrade >= 2 && !hasPendingForMe && !isBotTurn && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); dispatch(buyExplorer(state, viewerId)); }}
+                    style={{
+                      position: "absolute", bottom: "3px", left: "50%", transform: "translateX(-50%)",
+                      fontSize: "9px", background: "var(--trade)", color: "#000",
+                      padding: "0 5px", borderRadius: "3px", fontWeight: "bold",
+                      border: "none", cursor: "pointer", whiteSpace: "nowrap",
+                    }}
+                  >{fr.ui.buyBadge}</button>
                 )}
               </div>
             )}
@@ -401,7 +403,9 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
           }
           onBuy={
             state.tradeRow.includes(selected) && !hasPendingForMe && !isBotTurn
-              ? () => { dispatch(buyTradeRowCard(state, viewerId, selected.instanceId)); }
+              ? () => { dispatch(buyTradeRowCard(state, viewerId, selected.instanceId)); setSelected(null); }
+              : state.explorerPile.includes(selected) && player.currentTrade >= 2 && !hasPendingForMe && !isBotTurn
+              ? () => { dispatch(buyExplorer(state, viewerId)); setSelected(null); }
               : undefined
           }
           onActivate={
