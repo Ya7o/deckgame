@@ -67,4 +67,4 @@ Playwright e2e : non exécuté (Ubuntu 26.04)
 
 ## Hash du commit
 
-- A remplir après git push
+- 31a6c58
