@@ -207,4 +207,5 @@ export type SetupOptions = {
   player1Name?: string;
   player2Name?: string;
   seed?: string;
+  rand?: () => number;
 };

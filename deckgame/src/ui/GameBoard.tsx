@@ -45,9 +45,11 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
     return () => clearTimeout(timer);
   }, [state, gameMode]);
 
-  const viewerId = state.currentPlayerId;
+  // In solo mode, the viewer is always the human player regardless of whose turn it is.
+  // Without this fix, the UI flips to show the bot's hand/perspective during its turn.
+  const viewerId = gameMode === "solo_bot" ? "player_1" : state.currentPlayerId;
   const player = state.players[viewerId];
-  const opponent = state.players[state.opponentPlayerId];
+  const opponent = state.players[viewerId === "player_1" ? "player_2" : "player_1"];
   const isBotTurn = gameMode === "solo_bot" && state.currentPlayerId === "player_2";
 
   function dispatch(result: ReturnType<typeof playCard>) {

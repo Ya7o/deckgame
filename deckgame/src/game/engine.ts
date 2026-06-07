@@ -65,12 +65,12 @@ function guardNoPending(state: GameState, playerId: PlayerId): EngineError | nul
 export function setupGame(options: SetupOptions = {}): GameState {
   const p1Name = options.player1Name ?? "Player 1";
   const p2Name = options.player2Name ?? "Player 2";
-
+  const rand = options.rand;
 
   function makeStarterDeck(owner: PlayerId): CardInstance[] {
     const scouts = Array.from({ length: 8 }, () => mkInstance("scout", owner, "deck"));
     const vipers = Array.from({ length: 2 }, () => mkInstance("viper", owner, "deck"));
-    return shuffle([...scouts, ...vipers]);
+    return shuffle([...scouts, ...vipers], rand);
   }
 
   function makePlayer(id: PlayerId, name: string): PlayerState {
@@ -99,7 +99,7 @@ export function setupGame(options: SetupOptions = {}): GameState {
       tradeDeckRaw.push(mkInstance(def.id, null, "trade_deck"));
     }
   }
-  const tradeDeck = shuffle(tradeDeckRaw);
+  const tradeDeck = shuffle(tradeDeckRaw, rand);
 
   // Explorer pile
   const explorerPile: CardInstance[] = Array.from({ length: 10 }, () =>

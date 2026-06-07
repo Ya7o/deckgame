@@ -9,7 +9,7 @@ import type { GameState, PendingChoice } from "../game/types";
 // ---------------------------------------------------------------------------
 
 function makeBotState(overrides?: (s: GameState) => GameState): GameState {
-  let state = setupGame({ player1Name: "Humain", player2Name: "Bot" });
+  let state = setupGame({ player1Name: "Humain", player2Name: "Bot", rand: mulberry32(42) });
   const r = endTurn(state, "player_1");
   if (!r.ok) throw new Error("endTurn failed during test setup");
   state = r.state;
@@ -324,6 +324,17 @@ import { playCard, resolvePendingChoice } from "../game/engine";
 import type { ChoicePayload } from "../game/choices";
 import { validateStateInvariants } from "../game/validators";
 
+/** Deterministic RNG (mulberry32) — initial shuffle is always the same with a given seed. */
+function mulberry32(seed: number): () => number {
+  let s = seed;
+  return () => {
+    s += 0x6d2b79f5;
+    let t = Math.imul(s ^ (s >>> 15), s | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
 /** Simule le tour complet du joueur humain (player_1). */
 function humanTurn(initial: GameState): GameState {
   let s = initial;
@@ -356,7 +367,7 @@ function humanTurn(initial: GameState): GameState {
 
 describe("smoke test â jouabilite solo humain vs bot (PATCH 0010)", () => {
   it("les invariants tiennent a chaque tour et la partie se termine", () => {
-    let state = setupGame({ player1Name: "Humain", player2Name: "Bot" });
+    let state = setupGame({ player1Name: "Humain", player2Name: "Bot", rand: mulberry32(42) });
     let turns = 0;
     const MAX_TURNS = 200;
 
@@ -382,7 +393,7 @@ describe("smoke test â jouabilite solo humain vs bot (PATCH 0010)", () => {
   });
 
   it("le bot rend la main au joueur humain apres son tour (3 cycles)", () => {
-    let state = setupGame({ player1Name: "Humain", player2Name: "Bot" });
+    let state = setupGame({ player1Name: "Humain", player2Name: "Bot", rand: mulberry32(42) });
 
     for (let i = 0; i < 3 && state.phase !== "game_over"; i++) {
       expect(state.currentPlayerId).toBe("player_1");
@@ -401,7 +412,7 @@ describe("smoke test â jouabilite solo humain vs bot (PATCH 0010)", () => {
   });
 
   it("MAX_BOT_ACTIONS_PER_TURN protege contre les boucles infinies", () => {
-    let state = setupGame({ player1Name: "Humain", player2Name: "Bot" });
+    let state = setupGame({ player1Name: "Humain", player2Name: "Bot", rand: mulberry32(42) });
     const r0 = endTurn(state, "player_1");
     expect(r0.ok).toBe(true);
     if (!r0.ok) return;
@@ -419,7 +430,7 @@ describe("smoke test â jouabilite solo humain vs bot (PATCH 0010)", () => {
   });
 
   it("partie complete bot vs bot atteint game_over proprement", () => {
-    let state = setupGame({ player1Name: "BotA", player2Name: "BotB" });
+    let state = setupGame({ player1Name: "BotA", player2Name: "BotB", rand: mulberry32(7) });
     let turns = 0;
     const MAX_TURNS = 300;
 
@@ -460,7 +471,7 @@ describe("verrouillage interactions humaines pendant le tour bot (PATCH 0012)", 
    */
 
   function makeBotActiveState(): GameState {
-    const state = setupGame({ player1Name: "Humain", player2Name: "Bot" });
+    const state = setupGame({ player1Name: "Humain", player2Name: "Bot", rand: mulberry32(42) });
     const r = endTurn(state, "player_1");
     if (!r.ok) throw new Error("endTurn p1 failed");
     return r.state; // currentPlayerId === "player_2"
