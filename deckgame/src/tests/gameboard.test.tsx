@@ -1001,3 +1001,133 @@ describe("PATCH 0026 — Flow 11 : Ecran de fin de partie", () => {
     expect(container.textContent).toContain("aban");
   });
 });
+
+// ---------------------------------------------------------------------------
+// PATCH 0033 — QA visuelle mobile post-V0 ciblée
+//
+// Scénarios couverts :
+//   1. Section EN JEU : label ne dit plus "Vaisseaux" seul
+//   2. Bouton ACTIV. : sous la carte (flexDirection column), non superposé
+//   3. Modal : s'ouvre, possède un bouton Fermer
+//   4. Overlay modal : opacité 0.85 (rgba 0.85)
+//   5. Zone MAIN : présente et consultable (cartes JOUER visibles)
+//   6. EN JEU et MAIN sont deux sections distinctes
+//
+// Playwright e2e mobile (iPhone 12, 390×844) non disponible sur Ubuntu 26.04 :
+// npx playwright install chromium échoue ("not supported on ubuntu26.04-x64").
+// Tests e2e dans e2e/mobile-qa.spec.ts — exécutables dès que l'environnement
+// supporte l'installation de Chromium.
+// ---------------------------------------------------------------------------
+
+describe("PATCH 0033 — QA visuelle mobile post-V0", () => {
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
+
+  // Helper: état humain avec une base en jeu
+  function makeStateWithBase(exhausted: boolean) {
+    const rand = mulberry32(42);
+    const state = setupGame({ player1Name: "Joueur 1", player2Name: "Bot", rand });
+    const baseInst = {
+      instanceId: "qa-base-inst",
+      definitionId: "space_station",
+      exhausted,
+      currentZone: "bases" as const,
+      ownerId: "player_1" as const,
+    };
+    return {
+      ...state,
+      players: {
+        ...state.players,
+        player_1: { ...state.players.player_1, bases: [baseInst] },
+      },
+    };
+  }
+
+  it("1. section EN JEU affiche \"EN JEU\" et non \"EN JEU — Vaisseaux\"", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    expect(container.textContent).toContain("EN JEU");
+    expect(container.textContent).not.toContain("EN JEU — Vaisseaux");
+  });
+
+  it("2. bouton ACTIV. est dans un wrapper flexDirection:column (non superposé)", () => {
+    const state = makeStateWithBase(false);
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const activBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.includes("ACTIV."));
+    expect(activBtn).toBeDefined();
+    // Parent must be a flex-column wrapper (not the card itself)
+    const wrapper = activBtn?.parentElement;
+    expect(wrapper?.style?.flexDirection).toBe("column");
+  });
+
+  it("3. ACTIV. absent pour une base exhausted (pas de superposition fantôme)", () => {
+    const state = makeStateWithBase(true);
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const activBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.includes("ACTIV."));
+    expect(activBtn).toBeUndefined();
+  });
+
+  it("4. tap carte ouvre modale avec bouton Fermer", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    // Click first card that has a title (CardView renders title={nameFr})
+    const cardEls = container.querySelectorAll("[title]");
+    expect(cardEls.length).toBeGreaterThan(0);
+    fireEvent.click(cardEls[0]);
+    const closeBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.includes("Fermer"));
+    expect(closeBtn).toBeDefined();
+  });
+
+  it("5. overlay modal contient l'opacité 0.85", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    // Open modal
+    const cardEls = container.querySelectorAll("[title]");
+    fireEvent.click(cardEls[0]);
+    // Find fixed overlay
+    const allDivs = Array.from(container.querySelectorAll("div"));
+    const overlay = allDivs.find(el => el.style?.position === "fixed");
+    expect(overlay).toBeDefined();
+    const bg = overlay?.style?.background ?? "";
+    expect(bg).toContain("0.85");
+  });
+
+  it("6. zone MAIN présente et contient des boutons JOUER", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    expect(container.textContent).toContain("MAIN");
+    const jouerBtns = Array.from(container.querySelectorAll("button"))
+      .filter(b => b.textContent?.includes("JOUER"));
+    expect(jouerBtns.length).toBeGreaterThan(0);
+  });
+
+  it("7. EN JEU et MAIN sont deux zones distinctes dans le DOM", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    expect(container.textContent).toContain("EN JEU");
+    expect(container.textContent).toContain("MAIN");
+    // Both labels must be visible — confirm by checking both appear in text
+    const text = container.textContent ?? "";
+    const posInPlay = text.indexOf("EN JEU");
+    const posHand = text.indexOf("MAIN");
+    expect(posInPlay).toBeGreaterThanOrEqual(0);
+    expect(posHand).toBeGreaterThan(posInPlay); // MAIN section comes after EN JEU
+  });
+});
