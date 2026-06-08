@@ -1,7 +1,7 @@
 # PATCH 0049 — Documentation V0.1
 
 **Date :** 2026-06-08
-**Commit :** à renseigner après push
+**Commit :** 6a0187f
 **Branche :** master
 **Tests :** 274 / 274 GREEN (inchangé — aucune modification source)
 **Playwright :** aucun nouveau test (pas de code UI modifié)
