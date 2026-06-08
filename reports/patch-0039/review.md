@@ -1,6 +1,6 @@
 # PATCH 0039 — Préparer l'architecture responsive portrait / paysage
 
-**Commit :** à renseigner après push
+**Commit :** `0bfaa76`
 **Date :** 2026-06-08
 **Branche :** master
 **Type :** code / QA / doc
