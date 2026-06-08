@@ -1762,3 +1762,87 @@ describe("PATCH 0041 — D. Journal paysage — bouton fermer 44×44px", () => {
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// PATCH 0043 — Stabilisation mode paysage
+// Vérifie :
+//   A. StartScreen paysage — layout 2 colonnes (App.tsx)
+//   B. StartScreen portrait non régressé
+// ---------------------------------------------------------------------------
+
+// Import App component for StartScreen tests
+// We import App directly to test the StartScreen landscape layout
+import App from "../App";
+
+describe("PATCH 0043 — A. StartScreen paysage (layout 2 colonnes)", () => {
+  afterEach(() => { vi.unstubAllGlobals(); });
+
+  it("Landscape : StartScreen a un layout flex row", () => {
+    mockLandscapeMediaQuery();
+    const { container } = render(React.createElement(App));
+    // The landscape StartScreen outer div should have flexDirection: row
+    const rowDiv = Array.from(container.querySelectorAll("div")).find(
+      (d) => (d as HTMLElement).style.flexDirection === "row" && (d as HTMLElement).style.height === "100%"
+    );
+    expect(rowDiv).toBeDefined();
+  });
+
+  it("Landscape : StartScreen affiche le titre DECKGAME", () => {
+    mockLandscapeMediaQuery();
+    const { container } = render(React.createElement(App));
+    expect(container.textContent).toContain("DECKGAME");
+  });
+
+  it("Landscape : StartScreen affiche les règles (rulesLine1)", () => {
+    mockLandscapeMediaQuery();
+    const { container } = render(React.createElement(App));
+    // Rules description must be visible in landscape (was truncated before)
+    expect(container.textContent).toContain("Éclaireurs");
+  });
+
+  it("Landscape : bouton Contre le Bot présent et cliquable", () => {
+    mockLandscapeMediaQuery();
+    const { container } = render(React.createElement(App));
+    const soloBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.toLowerCase().includes("bot"));
+    expect(soloBtn).toBeDefined();
+  });
+
+  it("Landscape : cliquer Contre le Bot lance le plateau paysage", () => {
+    mockLandscapeMediaQuery();
+    const { container } = render(React.createElement(App));
+    const soloBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.toLowerCase().includes("bot"));
+    expect(soloBtn).toBeDefined();
+    fireEvent.click(soloBtn!);
+    // After clicking, should see MAIN section (game started)
+    expect(container.textContent).toContain("MAIN");
+    // Should be landscape layout
+    const landscapeRoot = container.querySelector("[data-layout='landscape']");
+    expect(landscapeRoot).not.toBeNull();
+  });
+});
+
+describe("PATCH 0043 — B. StartScreen portrait non régressé", () => {
+  it("Portrait : StartScreen layout flex column", () => {
+    // No landscape mock
+    const { container } = render(React.createElement(App));
+    // Portrait StartScreen uses column layout (alignItems: center)
+    expect(container.textContent).toContain("DECKGAME");
+    expect(container.textContent).toContain("Éclaireurs");
+    const soloBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.toLowerCase().includes("bot"));
+    expect(soloBtn).toBeDefined();
+  });
+
+  it("Portrait : cliquer Contre le Bot lance le plateau portrait", () => {
+    // No landscape mock
+    const { container } = render(React.createElement(App));
+    const soloBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.toLowerCase().includes("bot"));
+    fireEvent.click(soloBtn!);
+    expect(container.textContent).toContain("MAIN");
+    const portraitRoot = container.querySelector("[data-layout='portrait']");
+    expect(portraitRoot).not.toBeNull();
+  });
+});
