@@ -1,6 +1,6 @@
 # PATCH 0038 — Corriger les frictions portrait prioritaires
 
-**Commit :** à renseigner après push
+**Commit :** `2bd4bc5`
 **Date :** 2026-06-08
 **Branche :** master
 **Type :** code / QA / doc
