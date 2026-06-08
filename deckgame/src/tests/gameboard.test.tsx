@@ -1411,3 +1411,119 @@ describe("PATCH 0039 — C. Non-régression portrait", () => {
     expect(root?.style?.overflow).toBe("hidden");
   });
 });
+
+
+// ---------------------------------------------------------------------------
+// PATCH 0040 — Layout plateau paysage
+// Tests avec mockMediaQuery pour simuler paysage dans jsdom
+// ---------------------------------------------------------------------------
+
+function mockLandscapeMediaQuery() {
+  const original = window.matchMedia;
+  vi.stubGlobal("matchMedia", (query: string) => ({
+    matches: query.includes("landscape"),
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  }));
+  return () => vi.unstubAllGlobals();
+}
+
+describe("PATCH 0040 — A. Landscape layout activé", () => {
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
+
+  it("data-layout=landscape quand matchMedia retourne landscape", () => {
+    mockLandscapeMediaQuery();
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const root = container.querySelector("[data-layout='landscape']");
+    expect(root).not.toBeNull();
+  });
+
+  it("Landscape : RANGÉE COMMERCIALE présente", () => {
+    mockLandscapeMediaQuery();
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    expect(container.textContent).toContain("RANGÉE COMMERCIALE");
+  });
+
+  it("Landscape : section MAIN présente", () => {
+    mockLandscapeMediaQuery();
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    expect(container.textContent).toContain("MAIN");
+  });
+
+  it("Landscape : boutons JOUER présents pendant tour humain", () => {
+    mockLandscapeMediaQuery();
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const jouer = Array.from(container.querySelectorAll("button")).filter(b => b.textContent?.includes("JOUER"));
+    expect(jouer.length).toBeGreaterThan(0);
+  });
+
+  it("Landscape : bouton Fin du tour présent", () => {
+    mockLandscapeMediaQuery();
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const finBtn = Array.from(container.querySelectorAll("button")).find(b => b.textContent?.includes("Fin du tour"));
+    expect(finBtn).toBeDefined();
+  });
+
+  it("Landscape : EN JEU présent", () => {
+    mockLandscapeMediaQuery();
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    expect(container.textContent).toContain("EN JEU");
+  });
+
+  it("Landscape : aucune action humaine pendant tour bot", () => {
+    mockLandscapeMediaQuery();
+    const state = makeBotTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const jouer = Array.from(container.querySelectorAll("button")).filter(b => b.textContent?.trim() === "JOUER");
+    expect(jouer.length).toBe(0);
+  });
+
+  it("Landscape : label 'Tour du Bot' présent pendant tour bot", () => {
+    mockLandscapeMediaQuery();
+    const state = makeBotTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    expect(container.textContent).toContain("Tour du Bot");
+  });
+
+  it("Portrait non régressé : toujours portrait quand matchMedia portrait", () => {
+    // No mock — jsdom default returns portrait
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const root = container.querySelector("[data-layout]") as HTMLElement | null;
+    const layout = root?.dataset?.layout;
+    // jsdom default: portrait (matchMedia returns false for landscape)
+    expect(layout).toBe("portrait");
+    expect(container.textContent).toContain("MAIN");
+    expect(container.textContent).toContain("RANGÉE COMMERCIALE");
+  });
+});

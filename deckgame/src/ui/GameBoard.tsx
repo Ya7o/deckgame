@@ -80,6 +80,308 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
   const opponentOutposts = opponent.bases.filter(b => getCardDef(b.definitionId).isOutpost);
   const canAttackDirect = opponentOutposts.length === 0;
 
+  // ═══ LANDSCAPE LAYOUT ═══
+  if (orientation === "landscape") {
+    return (
+      <div
+        data-layout="landscape"
+        style={{
+          display: "flex", flexDirection: "column", height: "100%",
+          background: "var(--bg)", overflow: "hidden", position: "relative",
+        }}
+      >
+        {/* LANDSCAPE — Bot banner compact */}
+        {isBotTurn && (
+          <div style={{
+            padding: "5px 12px",
+            background: "#191730",
+            borderBottom: "2px solid var(--accent)",
+            textAlign: "center",
+            fontSize: "12px", color: "var(--accent)", fontWeight: "bold",
+            flexShrink: 0, letterSpacing: "0.5px",
+          }}>
+            ⏳ {fr.bot.thinkingLabel}
+          </div>
+        )}
+
+        {/* LANDSCAPE — Opponent zone (compact row) */}
+        <div style={{
+          padding: "5px 10px",
+          background: "var(--surface)",
+          borderBottom: "1px solid var(--border)",
+          flexShrink: 0,
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          flexWrap: "nowrap",
+          overflowX: "auto",
+        }}>
+          <span style={{ fontWeight: "bold", fontSize: "12px", flexShrink: 0 }}>{opponent.name}</span>
+          <span style={{ color: "var(--authority)", fontWeight: "bold", fontSize: "12px", flexShrink: 0 }}>
+            ♥ {opponent.authority}
+          </span>
+          <span style={{ color: "var(--text-muted)", fontSize: "10px", flexShrink: 0 }}>
+            {fr.ui.deck} {opponent.deck.length} · {fr.ui.discard} {opponent.discard.length} · {fr.ui.hand_short} {opponent.hand.length}
+          </span>
+          {opponentOutposts.length > 0 && (
+            <span style={{
+              fontSize: "10px", color: "var(--danger)", background: "rgba(255,85,85,0.12)",
+              padding: "1px 5px", borderRadius: "4px", border: "1px solid rgba(255,85,85,0.3)",
+              flexShrink: 0,
+            }}>
+              🛡 {opponentOutposts.length} avant-poste{opponentOutposts.length > 1 ? "s" : ""}
+            </span>
+          )}
+          {opponent.bases.map((base) => {
+            const def = getCardDef(base.definitionId);
+            const canAttack = player.currentCombat >= (def.defense ?? 999) && !hasPendingForMe && !isBotTurn;
+            return (
+              <div key={base.instanceId} style={{ "--card-w": "52px", "--card-h": "40px" } as React.CSSProperties}>
+                <CardView
+                  card={base} attackable={canAttack}
+                  onClick={() => { if (canAttack) dispatch(attackBase(state, viewerId, base.instanceId)); else handleCardClick(base); }}
+                />
+              </div>
+            );
+          })}
+        </div>
+
+        {/* LANDSCAPE — Trade row */}
+        <div style={{
+          padding: "5px 8px 4px 8px",
+          borderBottom: "1px solid var(--border)",
+          flexShrink: 0, background: "#12121a", position: "relative",
+        }}>
+          <div style={{ fontSize: "10px", color: "var(--text-muted)", marginBottom: "3px" }}>
+            {fr.ui.tradeRow}
+            <span style={{ marginLeft: "6px", opacity: 0.7 }}>{fr.ui.tradeDeck} {state.tradeDeck.length}</span>
+            <span style={{ marginLeft: "4px", opacity: 0.7 }}>· {fr.ui.explorerPile} {state.explorerPile.length}</span>
+          </div>
+          <div style={{ overflowX: "auto" }}>
+            <div style={{ display: "flex", gap: "5px", flexWrap: "nowrap", alignItems: "flex-start", paddingBottom: "2px" }}>
+              {state.tradeRow.map((card) => {
+                const def = getCardDef(card.definitionId);
+                const canBuy = player.currentTrade >= (def.cost ?? 999);
+                return (
+                  <div key={card.instanceId} style={{ position: "relative" }}>
+                    <CardView card={card} dimmed={!canBuy} onClick={() => handleCardClick(card)} />
+                    {canBuy && !hasPendingForMe && !isBotTurn && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); dispatch(buyTradeRowCard(state, viewerId, card.instanceId)); }}
+                        style={{
+                          position: "absolute", bottom: "3px", left: "50%", transform: "translateX(-50%)",
+                          fontSize: "8px", background: "var(--trade)", color: "#000",
+                          padding: "0 4px", borderRadius: "3px", fontWeight: "bold",
+                          border: "none", cursor: "pointer", whiteSpace: "nowrap", minHeight: "auto",
+                        }}
+                      >{fr.ui.buyBadge}</button>
+                    )}
+                  </div>
+                );
+              })}
+              {state.explorerPile.length > 0 && (
+                <div style={{ position: "relative" }}>
+                  <div
+                    style={{
+                      width: "var(--card-w)", height: "var(--card-h)",
+                      border: `1px solid ${player.currentTrade >= 2 ? "var(--trade)" : "var(--border)"}`,
+                      borderRadius: "var(--radius)", background: "var(--surface2)",
+                      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                      cursor: "pointer", opacity: player.currentTrade >= 2 ? 1 : 0.4,
+                      fontSize: "9px", gap: "3px", flexShrink: 0,
+                    }}
+                    onClick={() => handleCardClick(state.explorerPile[0])}
+                  >
+                    <div style={{ color: "var(--trade)", fontWeight: "bold", fontSize: "10px" }}>2</div>
+                    <div style={{ fontWeight: "bold", fontSize: "9px" }}>{fr.cardNames.explorer}</div>
+                    <div style={{ color: "var(--text-muted)", fontSize: "8px" }}>×{state.explorerPile.length}</div>
+                  </div>
+                  {player.currentTrade >= 2 && !hasPendingForMe && !isBotTurn && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); dispatch(buyExplorer(state, viewerId)); }}
+                      style={{
+                        position: "absolute", bottom: "3px", left: "50%", transform: "translateX(-50%)",
+                        fontSize: "8px", background: "var(--trade)", color: "#000",
+                        padding: "0 4px", borderRadius: "3px", fontWeight: "bold",
+                        border: "none", cursor: "pointer", whiteSpace: "nowrap", minHeight: "auto",
+                      }}
+                    >{fr.ui.buyBadge}</button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+          <div style={{
+            position: "absolute", right: 0, top: 0, bottom: 0, width: "36px",
+            background: "linear-gradient(to right, transparent, #12121a)",
+            pointerEvents: "none", zIndex: 1,
+          }} />
+        </div>
+
+        {/* LANDSCAPE — Middle: EN JEU + Resources + Actions */}
+        <div style={{ display: "flex", flexDirection: "row", borderBottom: "1px solid var(--border)", flexShrink: 0, background: "#0d0d14" }}>
+          {/* Left: EN JEU micro */}
+          <div style={{ flex: 1, padding: "4px 6px", overflowX: "auto", display: "flex", flexDirection: "column", minWidth: 0 }}>
+            <div style={{ fontSize: "9px", color: "var(--text-muted)", marginBottom: "2px", flexShrink: 0 }}>{fr.ui.inPlay}</div>
+            <div style={{ display: "flex", gap: "4px", flexWrap: "nowrap", alignItems: "flex-start" }}>
+              {(player.inPlay.length > 0 || player.bases.length > 0) ? (
+                <>
+                  {player.inPlay.map((card) => {
+                    const def = getCardDef(card.definitionId);
+                    const hasSelfScrap = def.scrapEffects.some(e => e.type === "self_scrap");
+                    return (
+                      <div key={card.instanceId} style={{ position: "relative", "--card-w": "48px", "--card-h": "54px" } as React.CSSProperties}>
+                        <CardView card={card} onClick={() => handleCardClick(card)} />
+                        {hasSelfScrap && !hasPendingForMe && !isBotTurn && (
+                          <div onClick={(e) => { e.stopPropagation(); dispatch(activateSelfScrap(state, viewerId, card.instanceId)); }}
+                            style={{ position: "absolute", top: "2px", right: "2px", fontSize: "7px", background: "var(--danger)", color: "#fff", padding: "0 2px", borderRadius: "2px", cursor: "pointer", fontWeight: "bold" }}>
+                            ⊗
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {player.bases.map((base) => {
+                    const def = getCardDef(base.definitionId);
+                    const hasSelfScrap = def.scrapEffects.some(e => e.type === "self_scrap");
+                    return (
+                      <div key={base.instanceId} style={{ position: "relative", "--card-w": "48px", "--card-h": "54px" } as React.CSSProperties}>
+                        <CardView card={base} onClick={() => handleCardClick(base)} />
+                        {hasSelfScrap && !hasPendingForMe && !isBotTurn && (
+                          <div onClick={(e) => { e.stopPropagation(); dispatch(activateSelfScrap(state, viewerId, base.instanceId)); }}
+                            style={{ position: "absolute", top: "2px", right: "2px", fontSize: "7px", background: "var(--danger)", color: "#fff", padding: "0 2px", borderRadius: "2px", cursor: "pointer", fontWeight: "bold" }}>
+                            ⊗
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </>
+              ) : (
+                <div style={{ fontSize: "9px", color: "var(--text-muted)", opacity: 0.4, fontStyle: "italic", paddingTop: "2px" }}>
+                  {fr.ui.inPlayEmpty}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div style={{ width: "1px", background: "var(--border)", alignSelf: "stretch" }} />
+
+          {/* Right: Resources + Actions */}
+          <div style={{ flexShrink: 0, padding: "4px 8px", display: "flex", flexDirection: "column", gap: "4px", justifyContent: "center" }}>
+            <div style={{ display: "flex", gap: "6px", alignItems: "center", flexWrap: "wrap" }}>
+              <span style={{ color: "var(--authority)", fontWeight: "bold", fontSize: "11px" }}>♥ {player.authority}</span>
+              <span style={{ color: "var(--trade)", fontWeight: "bold", fontSize: "11px" }}>{fr.resources.trade}: {player.currentTrade}</span>
+              <span style={{ color: "var(--combat)", fontWeight: "bold", fontSize: "11px" }}>⚔ {player.currentCombat}</span>
+              <span style={{ color: "var(--text-muted)", fontSize: "9px" }}>{fr.ui.deck} {player.deck.length} · {fr.ui.discard} {player.discard.length}</span>
+            </div>
+            <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", alignItems: "center" }}>
+              {canAttackDirect && player.currentCombat > 0 && !hasPendingForMe && !isBotTurn && (
+                <button className="danger"
+                  onClick={() => dispatch(attackOpponent(state, viewerId, player.currentCombat))}
+                  style={{ minHeight: "30px", padding: "2px 8px", fontSize: "11px" }}>
+                  ⚔ {fr.actions.attack} ({player.currentCombat})
+                </button>
+              )}
+              {!canAttackDirect && player.currentCombat > 0 && !isBotTurn && (
+                <span style={{ fontSize: "9px", color: "var(--danger)", background: "rgba(255,85,85,0.1)", padding: "2px 5px", borderRadius: "4px", border: "1px solid rgba(255,85,85,0.25)" }}>
+                  🛡 Avant-poste
+                </span>
+              )}
+              <button onClick={() => setShowLog(!showLog)} style={{ minHeight: "30px", padding: "2px 6px", fontSize: "10px" }}>
+                {fr.actions.log}
+              </button>
+              <button className="primary" disabled={hasPendingForMe || isBotTurn}
+                onClick={() => dispatch(endTurn(state, viewerId))}
+                style={{ minHeight: "30px", padding: "2px 8px", fontSize: "11px" }}>
+                {fr.actions.endTurn}
+              </button>
+              <button
+                onClick={() => { if (confirm(fr.actions.concede + " ?")) dispatch(concedeGame(state, viewerId)); }}
+                style={{ fontSize: "9px", color: "var(--text-muted)", padding: "1px 5px", minHeight: "18px", background: "transparent", border: "1px solid rgba(255,85,85,0.25)", opacity: 0.8 }}>
+                {fr.actions.concede}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* LANDSCAPE — HAND (bottom, always visible) */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "5px 8px", paddingBottom: "calc(5px + env(safe-area-inset-bottom, 0px))", background: "var(--bg)", overflow: "hidden", minHeight: 0 }}>
+          <div style={{ fontSize: "10px", color: "var(--text-muted)", marginBottom: "3px", flexShrink: 0 }}>
+            {fr.ui.hand} — {player.name} ({fr.ui.turn} {state.turnNumber})
+            {player.hand.length > 0 && (
+              <span style={{ marginLeft: "5px", opacity: 0.7 }}>
+                · {player.hand.length} carte{player.hand.length > 1 ? "s" : ""}
+              </span>
+            )}
+          </div>
+          <div style={{ position: "relative", flex: 1, minHeight: 0 }}>
+            <div style={{ overflowX: "auto", height: "100%", ...(isBotTurn ? { filter: "grayscale(40%)", opacity: 0.7 } : {}) }}>
+              <div style={{ display: "flex", gap: "6px", flexWrap: "nowrap", paddingBottom: "4px", alignItems: "flex-start" }}>
+                {player.hand.map((card) => (
+                  <div key={card.instanceId} style={{ position: "relative" }}>
+                    <CardView card={card} playable={!hasPendingForMe && !isBotTurn} onClick={() => handleCardClick(card)} />
+                    {!hasPendingForMe && !isBotTurn && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); dispatch(playCard(state, viewerId, card.instanceId)); }}
+                        style={{ position: "absolute", bottom: "3px", left: "50%", transform: "translateX(-50%)", fontSize: "8px", background: "var(--accent)", color: "#fff", padding: "0 4px", borderRadius: "3px", fontWeight: "bold", border: "none", cursor: "pointer", whiteSpace: "nowrap", minHeight: "auto" }}>
+                        {fr.ui.playBadge}
+                      </button>
+                    )}
+                  </div>
+                ))}
+                {player.hand.length === 0 && (
+                  <div style={{ color: "var(--text-muted)", fontSize: "12px", padding: "10px 4px", fontStyle: "italic" }}>
+                    {fr.ui.handEmpty}
+                  </div>
+                )}
+              </div>
+            </div>
+            {player.hand.length > 0 && !isBotTurn && (
+              <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "30px", background: "linear-gradient(to right, transparent, var(--bg))", pointerEvents: "none", zIndex: 1 }} />
+            )}
+            {isBotTurn && (
+              <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.60)", pointerEvents: "none", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <span style={{ fontSize: "11px", color: "var(--text-muted)", fontStyle: "italic" }}>{fr.bot.turnLabel}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* LANDSCAPE — Journal overlay */}
+        {showLog && (
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 50, borderTop: "2px solid var(--border)", background: "var(--surface)", padding: "6px 8px", maxHeight: "45%", overflowY: "auto" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+              <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "bold" }}>Journal</span>
+              <button onClick={() => setShowLog(false)} style={{ minWidth: "30px", minHeight: "30px", padding: "0", fontSize: "14px" }}>✕</button>
+            </div>
+            <GameLog entries={state.log} maxHeight={120} />
+          </div>
+        )}
+
+        {/* Shared overlays */}
+        <PendingChoicePanel state={state} viewerId={viewerId} onResolve={handleResolveChoice} />
+        {selected && (
+          <CardDetailModal
+            card={selected} state={state}
+            onClose={() => setSelected(null)}
+            onPlay={player.hand.includes(selected) && !hasPendingForMe && !isBotTurn ? () => { dispatch(playCard(state, viewerId, selected.instanceId)); setSelected(null); } : undefined}
+            onBuy={
+              state.tradeRow.includes(selected) && player.currentTrade >= (getCardDef(selected.definitionId).cost ?? 999) && !hasPendingForMe && !isBotTurn
+                ? () => { dispatch(buyTradeRowCard(state, viewerId, selected.instanceId)); setSelected(null); }
+                : state.explorerPile.includes(selected) && player.currentTrade >= 2 && !hasPendingForMe && !isBotTurn
+                ? () => { dispatch(buyExplorer(state, viewerId)); setSelected(null); }
+                : undefined
+            }
+            onActivate={player.bases.includes(selected) && !selected.exhausted && !hasPendingForMe && !isBotTurn ? () => { dispatch(activateBase(state, viewerId, selected.instanceId)); } : undefined}
+            onSelfScrap={(player.inPlay.includes(selected) || player.bases.includes(selected)) && !hasPendingForMe && !isBotTurn ? () => { dispatch(activateSelfScrap(state, viewerId, selected.instanceId)); } : undefined}
+            onAttackBase={opponent.bases.includes(selected) && player.currentCombat >= (getCardDef(selected.definitionId).defense ?? 999) && !hasPendingForMe && !isBotTurn ? () => { dispatch(attackBase(state, viewerId, selected.instanceId)); } : undefined}
+          />
+        )}
+      </div>
+    );
+  }
+
   return (
     <div
       data-layout={orientation}
