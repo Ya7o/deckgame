@@ -1,7 +1,7 @@
 # PATCH 0042 — QA Playwright paysage et décision d'activation
 
 **Date :** 2026-06-08
-**Commit :** à renseigner après push
+**Commit :** `26130d2`
 **Branche :** master
 **Tests :** 236 / 236 GREEN
 **Playwright :** 14 / 14 (7 portrait + 7 landscape)
