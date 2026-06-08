@@ -6,6 +6,7 @@ import { GameBoard } from "./ui/GameBoard";
 import type { GameMode } from "./ui/gameMode";
 import { fr } from "./i18n";
 import { useOrientation } from "./hooks/useOrientation";
+import { useFullscreen } from "./hooks/useFullscreen";
 
 interface GameSession {
   state: GameState;
@@ -22,6 +23,7 @@ function StartScreen({ onStart }: { onStart: (p1: string, p2: string, mode: Game
   const [p1, setP1] = useState(fr.startScreen.player1Default);
   const [p2, setP2] = useState(fr.startScreen.player2Default);
   const orientation = useOrientation();
+  const { isFullscreen, isSupported: isFullscreenSupported, toggleFullscreen } = useFullscreen();
 
   function handleMode2p() { onStart(p1 || fr.startScreen.player1Default, p2 || fr.startScreen.player2Default, "local_2p"); }
   function handleSolo()   { onStart(p1 || fr.startScreen.player1Default, fr.startScreen.botName, "solo_bot"); }
@@ -44,6 +46,15 @@ function StartScreen({ onStart }: { onStart: (p1: string, p2: string, mode: Game
               placeholder={fr.startScreen.player2Placeholder} style={inputStyle} />
             <button className="primary" onClick={handleMode2p}>{fr.startScreen.mode2p}</button>
             <button onClick={handleSolo}>{fr.startScreen.modeSolo}</button>
+            {isFullscreenSupported && (
+              <button
+                aria-label={isFullscreen ? fr.actions.exitFullscreen : fr.actions.enterFullscreen}
+                onClick={toggleFullscreen}
+                style={{ fontSize: "12px", opacity: 0.7, background: "transparent", border: "1px solid var(--border)" }}
+              >
+                {isFullscreen ? fr.actions.exitFullscreen : fr.actions.enterFullscreen}
+              </button>
+            )}
           </div>
         </div>
         {/* Right: subtitle + rules */}
@@ -85,6 +96,15 @@ function StartScreen({ onStart }: { onStart: (p1: string, p2: string, mode: Game
         />
         <button className="primary" onClick={handleMode2p}>{fr.startScreen.mode2p}</button>
         <button onClick={handleSolo}>{fr.startScreen.modeSolo}</button>
+        {isFullscreenSupported && (
+          <button
+            aria-label={isFullscreen ? fr.actions.exitFullscreen : fr.actions.enterFullscreen}
+            onClick={toggleFullscreen}
+            style={{ fontSize: "13px", opacity: 0.7, background: "transparent", border: "1px solid var(--border)" }}
+          >
+            {isFullscreen ? fr.actions.exitFullscreen : fr.actions.enterFullscreen}
+          </button>
+        )}
       </div>
       <div style={{ fontSize: "12px", color: "var(--text-muted)", textAlign: "center", maxWidth: "320px" }}>
         <p>{fr.startScreen.rulesLine1}</p>

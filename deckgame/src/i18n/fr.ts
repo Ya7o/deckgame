@@ -38,6 +38,8 @@ export const fr = {
     attack: "Attaquer",
     log: "Journal",
     selfScrap: "Écarter",
+    enterFullscreen: "Plein écran",
+    exitFullscreen: "Quitter plein écran",
   },
 
   factions: {

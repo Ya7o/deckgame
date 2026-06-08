@@ -22,6 +22,7 @@ import { fr } from "../i18n";
 import type { GameMode } from "./gameMode";
 import { runBotTurn } from "../game/bot";
 import { useOrientation } from "../hooks/useOrientation";
+import { useFullscreen } from "../hooks/useFullscreen";
 
 interface Props {
   initialState: GameState;
@@ -53,6 +54,7 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
   const opponent = state.players[viewerId === "player_1" ? "player_2" : "player_1"];
   const isBotTurn = gameMode === "solo_bot" && state.currentPlayerId === "player_2";
   const orientation = useOrientation();
+  const { isFullscreen, isSupported: isFullscreenSupported, toggleFullscreen } = useFullscreen();
 
   function dispatch(result: ReturnType<typeof playCard>) {
     if (result.ok) {
@@ -301,6 +303,14 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
                 style={{ fontSize: "9px", color: "var(--text-muted)", padding: "1px 5px", minHeight: "18px", background: "transparent", border: "1px solid rgba(255,85,85,0.25)", opacity: 0.8 }}>
                 {fr.actions.concede}
               </button>
+              {isFullscreenSupported && (
+                <button
+                  aria-label={isFullscreen ? fr.actions.exitFullscreen : fr.actions.enterFullscreen}
+                  onClick={toggleFullscreen}
+                  style={{ fontSize: "9px", color: "var(--text-muted)", padding: "1px 5px", minHeight: "18px", background: "transparent", border: "1px solid var(--border)", opacity: 0.7 }}>
+                  {isFullscreen ? fr.actions.exitFullscreen : fr.actions.enterFullscreen}
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -677,7 +687,16 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
             {fr.actions.endTurn}
           </button>
         </div>
-        <div style={{ marginTop: "5px", display: "flex", justifyContent: "flex-end" }}>
+        <div style={{ marginTop: "5px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          {isFullscreenSupported ? (
+            <button
+              aria-label={isFullscreen ? fr.actions.exitFullscreen : fr.actions.enterFullscreen}
+              onClick={toggleFullscreen}
+              style={{ fontSize: "10px", color: "var(--text-muted)", padding: "2px 8px", minHeight: "22px", background: "transparent", border: "1px solid var(--border)", opacity: 0.7 }}
+            >
+              {isFullscreen ? fr.actions.exitFullscreen : fr.actions.enterFullscreen}
+            </button>
+          ) : <span />}
           <button
             onClick={() => { if (confirm(`${fr.actions.concede} ?`)) dispatch(concedeGame(state, viewerId)); }}
             style={{

@@ -16,6 +16,7 @@ import { GameBoard } from "../ui/GameBoard";
 import { setupGame, endTurn } from "../game/engine";
 import type { GameState } from "../game/types";
 import * as engineModule from "../game/engine";
+import { readFileSync } from "node:fs";
 
 // ---------------------------------------------------------------------------
 // Seeded RNG — deterministic initial state (Fisher-Yates via mulberry32)
@@ -2028,5 +2029,131 @@ describe("PATCH 0044 — G. Portrait non régressé", () => {
     const jouer = Array.from(container.querySelectorAll("button"))
       .filter(b => b.textContent?.includes("JOUER"));
     expect(jouer.length).toBeGreaterThan(0);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PATCH 0045 — Bouton plein écran
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("PATCH 0045 — A. Bouton plein écran masqué par défaut (jsdom)", () => {
+  // In jsdom, document.fullscreenEnabled is false → isSupported = false → no button
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
+
+  it("Portrait : bouton plein écran absent quand fullscreenEnabled=false", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const fsBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.includes("Plein écran") || b.textContent?.includes("Quitter plein écran"));
+    expect(fsBtn).toBeUndefined();
+  });
+
+  it("Landscape : bouton plein écran absent quand fullscreenEnabled=false", () => {
+    mockLandscapeMediaQuery();
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const fsBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.includes("Plein écran") || b.textContent?.includes("Quitter plein écran"));
+    expect(fsBtn).toBeUndefined();
+  });
+});
+
+describe("PATCH 0045 — B. Bouton plein écran visible quand supporté", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    Object.defineProperty(document, 'fullscreenEnabled', { configurable: true, get: () => true });
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    // Restore jsdom default
+    Object.defineProperty(document, 'fullscreenEnabled', { configurable: true, get: () => false });
+  });
+
+  it("Portrait : bouton 'Plein écran' présent quand fullscreenEnabled=true", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const fsBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.includes("Plein écran"));
+    expect(fsBtn).toBeDefined();
+  });
+
+  it("Landscape : bouton 'Plein écran' présent quand fullscreenEnabled=true", () => {
+    mockLandscapeMediaQuery();
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const fsBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.includes("Plein écran"));
+    expect(fsBtn).toBeDefined();
+  });
+});
+
+describe("PATCH 0045 — C. Click plein écran appelle requestFullscreen", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    Object.defineProperty(document, 'fullscreenEnabled', { configurable: true, get: () => true });
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    Object.defineProperty(document, 'fullscreenEnabled', { configurable: true, get: () => false });
+  });
+
+  it("Click sur 'Plein écran' appelle requestFullscreen sur documentElement", async () => {
+    const mockReqFS = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(document.documentElement, 'requestFullscreen', {
+      configurable: true, value: mockReqFS,
+    });
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const fsBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.includes("Plein écran"));
+    expect(fsBtn).toBeDefined();
+    fireEvent.click(fsBtn!);
+    // Allow async to settle
+    await Promise.resolve();
+    expect(mockReqFS).toHaveBeenCalledTimes(1);
+  });
+
+  it("Pas de crash si requestFullscreen absent", () => {
+    // Nullify requestFullscreen on documentElement
+    Object.defineProperty(document.documentElement, 'requestFullscreen', {
+      configurable: true, value: undefined,
+    });
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const fsBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.includes("Plein écran"));
+    if (fsBtn) {
+      expect(() => fireEvent.click(fsBtn)).not.toThrow();
+    }
+    // If no requestFullscreen and no webkit fallback, hook returns without crash
+    expect(container).toBeDefined();
+  });
+});
+
+describe("PATCH 0045 — D. manifest.webmanifest lié dans index.html", () => {
+  it("index.html contient <link rel=manifest>", () => {
+    const html = readFileSync(process.cwd() + "/index.html", "utf-8");
+    expect(html).toContain('rel="manifest"');
+    expect(html).toContain("manifest.webmanifest");
+  });
+
+  it("index.html contient apple-mobile-web-app-capable", () => {
+    const html = readFileSync(process.cwd() + "/index.html", "utf-8");
+    expect(html).toContain("apple-mobile-web-app-capable");
   });
 });

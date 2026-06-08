@@ -1,0 +1,22 @@
+{
+  "name": "Deckgame V0",
+  "short_name": "Deckgame",
+  "description": "Jeu de construction de deck — Star Realms Core Set. Jouez contre le bot ou un ami.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#0e0e12",
+  "background_color": "#0e0e12",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["games"],
+  "screenshots": []
+}
