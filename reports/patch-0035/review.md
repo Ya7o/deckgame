@@ -1,5 +1,6 @@
 # PATCH 0035 — Corrections UX visuelles post-analyse mobile
 
+**Commit :** `031c973`
 **Date :** 2026-06-08
 **Branche :** master
 **Statut :** GREEN — 197/197 tests · build propre
