@@ -1,7 +1,7 @@
 # PATCH 0044 — Stabiliser le paysage sur vrai navigateur mobile
 
 **Date :** 2026-06-08
-**Commit :** à renseigner après push
+**Commit :** `35dbbbb`
 **Branche :** master
 **Tests :** 256 / 256 GREEN
 **Playwright :** 15 / 15 (3 viewports paysage + témoin portrait)
