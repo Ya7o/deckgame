@@ -281,7 +281,7 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
               {canAttackDirect && player.currentCombat > 0 && !hasPendingForMe && !isBotTurn && (
                 <button className="danger"
                   onClick={() => dispatch(attackOpponent(state, viewerId, player.currentCombat))}
-                  style={{ minHeight: "30px", padding: "2px 8px", fontSize: "11px" }}>
+                  style={{ minHeight: "36px", padding: "2px 8px", fontSize: "11px" }}>
                   ⚔ {fr.actions.attack} ({player.currentCombat})
                 </button>
               )}
@@ -290,12 +290,12 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
                   🛡 Avant-poste
                 </span>
               )}
-              <button onClick={() => setShowLog(!showLog)} style={{ minHeight: "30px", padding: "2px 6px", fontSize: "10px" }}>
+              <button onClick={() => setShowLog(!showLog)} style={{ minHeight: "36px", padding: "2px 8px", fontSize: "10px" }}>
                 {fr.actions.log}
               </button>
               <button className="primary" disabled={hasPendingForMe || isBotTurn}
                 onClick={() => dispatch(endTurn(state, viewerId))}
-                style={{ minHeight: "30px", padding: "2px 8px", fontSize: "11px" }}>
+                style={{ minHeight: "36px", padding: "2px 8px", fontSize: "11px" }}>
                 {fr.actions.endTurn}
               </button>
               <button
@@ -363,7 +363,7 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
           <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 50, borderTop: "2px solid var(--border)", background: "var(--surface)", padding: "6px 8px", maxHeight: "45%", overflowY: "auto" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
               <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "bold" }}>Journal</span>
-              <button onClick={() => setShowLog(false)} style={{ minWidth: "44px", minHeight: "44px", padding: "0", fontSize: "16px", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+              <button aria-label="Fermer le journal" onClick={() => setShowLog(false)} style={{ minWidth: "44px", minHeight: "44px", padding: "0", fontSize: "16px", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
             </div>
             <GameLog entries={state.log} maxHeight={120} />
           </div>
@@ -674,7 +674,7 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
           )}
           <button
             onClick={() => setShowLog(!showLog)}
-            style={{ minHeight: "34px", padding: "4px 8px", fontSize: "11px" }}
+            style={{ minHeight: "44px", padding: "4px 8px", fontSize: "11px" }}
           >
             {fr.actions.log}
           </button>
@@ -682,7 +682,7 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
             className="primary"
             disabled={hasPendingForMe || isBotTurn}
             onClick={() => dispatch(endTurn(state, viewerId))}
-            style={{ minHeight: "34px", padding: "4px 12px" }}
+            style={{ minHeight: "44px", padding: "4px 12px" }}
           >
             {fr.actions.endTurn}
           </button>
@@ -701,7 +701,7 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
             onClick={() => { if (confirm(`${fr.actions.concede} ?`)) dispatch(concedeGame(state, viewerId)); }}
             style={{
               fontSize: "10px", color: "var(--text-muted)", padding: "2px 8px",
-              minHeight: "22px", background: "transparent",
+              minHeight: "32px", background: "transparent",
               border: "1px solid rgba(255,85,85,0.25)", opacity: 0.8,
             }}
           >
@@ -796,7 +796,7 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
             <button
               aria-label="Fermer le journal"
               onClick={() => setShowLog(false)}
-              style={{ fontSize: "13px", padding: "0 6px", minHeight: "24px", color: "var(--text-muted)", background: "transparent", border: "none", cursor: "pointer" }}
+              style={{ fontSize: "13px", padding: "0 6px", minHeight: "36px", minWidth: "36px", color: "var(--text-muted)", background: "transparent", border: "none", cursor: "pointer" }}
             >×</button>
           </div>
           <GameLog entries={state.log} maxHeight={150} />

@@ -2241,3 +2241,107 @@ describe("PATCH 0047 — B. StartScreen fullscreen bouton secondaire", () => {
     expect(fsBtn!.style.alignSelf).toBe("center");
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PATCH 0048 — Accessibilité + confort tactile
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("PATCH 0048 — A. Touch targets portrait ≥ 44px", () => {
+  beforeEach(() => { vi.useFakeTimers(); vi.unstubAllGlobals(); });
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+
+  it("Portrait : bouton Journal minHeight ≥ 44px", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const journalBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.trim() === "Journal");
+    expect(journalBtn).toBeDefined();
+    const h = parseInt(journalBtn!.style.minHeight || "0");
+    expect(h).toBeGreaterThanOrEqual(44);
+  });
+
+  it("Portrait : bouton Fin du tour minHeight ≥ 44px", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const endBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.trim() === "Fin du tour");
+    expect(endBtn).toBeDefined();
+    const h = parseInt(endBtn!.style.minHeight || "0");
+    expect(h).toBeGreaterThanOrEqual(44);
+  });
+
+  it("Portrait : bouton close journal × minHeight ≥ 32px", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    // Open journal first
+    const journalBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.trim() === "Journal");
+    fireEvent.click(journalBtn!);
+    const closeBtn = container.querySelector("button[aria-label='Fermer le journal']") as HTMLElement | null;
+    expect(closeBtn).not.toBeNull();
+    const h = parseInt(closeBtn!.style.minHeight || "0");
+    expect(h).toBeGreaterThanOrEqual(32);
+  });
+});
+
+describe("PATCH 0048 — B. Touch targets landscape ≥ 36px", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.stubGlobal("matchMedia", (query: string) => ({
+      matches: query.includes("landscape"),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+  });
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+
+  it("Landscape : bouton Journal minHeight ≥ 36px", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    // In landscape, the Journal button is in the compact actions bar
+    const journalBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.trim() === "Journal");
+    expect(journalBtn).toBeDefined();
+    const h = parseInt(journalBtn!.style.minHeight || "0");
+    expect(h).toBeGreaterThanOrEqual(36);
+  });
+
+  it("Landscape : bouton Fin du tour minHeight ≥ 36px", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const endBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.trim() === "Fin du tour");
+    expect(endBtn).toBeDefined();
+    const h = parseInt(endBtn!.style.minHeight || "0");
+    expect(h).toBeGreaterThanOrEqual(36);
+  });
+
+  it("Landscape : journal overlay × a aria-label='Fermer le journal'", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    // Open journal
+    const journalBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.trim() === "Journal");
+    fireEvent.click(journalBtn!);
+    // Close button should have aria-label in landscape too
+    const closeBtn = container.querySelector("button[aria-label='Fermer le journal']");
+    expect(closeBtn).not.toBeNull();
+  });
+});
