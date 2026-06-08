@@ -2071,6 +2071,7 @@ describe("PATCH 0045 — B. Bouton plein écran visible quand supporté", () => 
   afterEach(() => {
     vi.useRealTimers();
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
     // Restore jsdom default
     Object.defineProperty(document, 'fullscreenEnabled', { configurable: true, get: () => false });
   });
@@ -2155,5 +2156,88 @@ describe("PATCH 0045 — D. manifest.webmanifest lié dans index.html", () => {
   it("index.html contient apple-mobile-web-app-capable", () => {
     const html = readFileSync(process.cwd() + "/index.html", "utf-8");
     expect(html).toContain("apple-mobile-web-app-capable");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PATCH 0047 — Corrections mobile/PWA : journal portrait + fullscreen StartScreen
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("PATCH 0047 — A. Journal portrait : bouton fermeture", () => {
+  beforeEach(() => { vi.useFakeTimers(); vi.unstubAllGlobals(); });
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+
+  it("Portrait : ouvrir le journal affiche un bouton × accessible", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    // Open journal
+    const journalBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.trim() === "Journal");
+    expect(journalBtn).toBeDefined();
+    fireEvent.click(journalBtn!);
+
+    // Close button should appear
+    const closeBtn = container.querySelector("button[aria-label='Fermer le journal']");
+    expect(closeBtn).not.toBeNull();
+    expect(closeBtn!.textContent).toContain("×");
+  });
+
+  it("Portrait : cliquer × ferme le journal", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    // Open journal
+    const journalBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.trim() === "Journal");
+    fireEvent.click(journalBtn!);
+
+    // Verify journal is open (GameLog present)
+    expect(container.textContent).toContain("T1");
+
+    // Click × to close
+    const closeBtn = container.querySelector("button[aria-label='Fermer le journal']");
+    expect(closeBtn).not.toBeNull();
+    fireEvent.click(closeBtn!);
+
+    // Journal should be closed (close button gone)
+    const closeBtnAfter = container.querySelector("button[aria-label='Fermer le journal']");
+    expect(closeBtnAfter).toBeNull();
+  });
+
+  it("Portrait : journal header a un label 'Journal' visible", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const journalBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.trim() === "Journal");
+    fireEvent.click(journalBtn!);
+    // The header span with "Journal" text should be present (not just the button)
+    const spans = Array.from(container.querySelectorAll("span"))
+      .filter(s => s.textContent?.trim() === "Journal");
+    expect(spans.length).toBeGreaterThan(0);
+  });
+});
+
+describe("PATCH 0047 — B. StartScreen fullscreen bouton secondaire", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    Object.defineProperty(document, 'fullscreenEnabled', { configurable: true, get: () => true });
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    Object.defineProperty(document, 'fullscreenEnabled', { configurable: true, get: () => false });
+  });
+
+  it("StartScreen : bouton plein écran a alignSelf center (non pleine largeur)", async () => {
+    const { default: App } = await import("../App");
+    const { container } = render(React.createElement(App));
+    const fsBtn = container.querySelector("button[aria-label='Plein écran']") as HTMLElement | null;
+    expect(fsBtn).not.toBeNull();
+    expect(fsBtn!.style.alignSelf).toBe("center");
   });
 });

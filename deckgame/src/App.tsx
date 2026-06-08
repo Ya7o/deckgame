@@ -50,7 +50,7 @@ function StartScreen({ onStart }: { onStart: (p1: string, p2: string, mode: Game
               <button
                 aria-label={isFullscreen ? fr.actions.exitFullscreen : fr.actions.enterFullscreen}
                 onClick={toggleFullscreen}
-                style={{ fontSize: "12px", opacity: 0.7, background: "transparent", border: "1px solid var(--border)" }}
+                style={{ fontSize: "11px", opacity: 0.6, background: "transparent", border: "1px solid var(--border)", alignSelf: "center", padding: "3px 12px", marginTop: "-2px" }}
               >
                 {isFullscreen ? fr.actions.exitFullscreen : fr.actions.enterFullscreen}
               </button>
@@ -100,7 +100,7 @@ function StartScreen({ onStart }: { onStart: (p1: string, p2: string, mode: Game
           <button
             aria-label={isFullscreen ? fr.actions.exitFullscreen : fr.actions.enterFullscreen}
             onClick={toggleFullscreen}
-            style={{ fontSize: "13px", opacity: 0.7, background: "transparent", border: "1px solid var(--border)" }}
+            style={{ fontSize: "11px", opacity: 0.6, background: "transparent", border: "1px solid var(--border)", alignSelf: "center", padding: "4px 14px", marginTop: "-4px" }}
           >
             {isFullscreen ? fr.actions.exitFullscreen : fr.actions.enterFullscreen}
           </button>

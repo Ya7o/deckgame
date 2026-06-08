@@ -790,8 +790,16 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
 
       {/* GAME LOG */}
       {showLog && (
-        <div style={{ padding: "8px", borderTop: "1px solid var(--border)", flexShrink: 0 }}>
-          <GameLog entries={state.log} />
+        <div style={{ padding: "6px 8px 8px 8px", borderTop: "1px solid var(--border)", flexShrink: 0 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+            <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "bold" }}>Journal</span>
+            <button
+              aria-label="Fermer le journal"
+              onClick={() => setShowLog(false)}
+              style={{ fontSize: "13px", padding: "0 6px", minHeight: "24px", color: "var(--text-muted)", background: "transparent", border: "none", cursor: "pointer" }}
+            >×</button>
+          </div>
+          <GameLog entries={state.log} maxHeight={150} />
         </div>
       )}
 
