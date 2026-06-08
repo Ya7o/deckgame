@@ -155,6 +155,7 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
         borderBottom: "1px solid var(--border)",
         flexShrink: 0,
         background: "#12121a",
+        position: "relative",
       }}>
         <div style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "5px" }}>
           {fr.ui.tradeRow}
@@ -223,6 +224,12 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
             )}
           </div>
         </div>
+        <div style={{
+          position: "absolute", right: 0, top: 0, bottom: 0, width: "28px",
+          background: "linear-gradient(to right, transparent, #12121a)",
+          pointerEvents: "none",
+          zIndex: 1,
+        }} />
       </div>
 
       {/* IN PLAY — ships + bases, horizontal scroll */}
@@ -230,7 +237,6 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
         padding: "8px",
         borderBottom: "1px solid var(--border)",
         flexShrink: 0,
-        minHeight: "60px",
         background: "#0d0d14",
       }}>
         <div style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "4px" }}>
@@ -305,6 +311,11 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
                 </div>
               );
             })}
+            {player.inPlay.length === 0 && player.bases.length === 0 && (
+              <div style={{ fontSize: "11px", color: "var(--text-muted)", opacity: 0.4, fontStyle: "italic", padding: "4px 0" }}>
+                {fr.ui.inPlayEmpty}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -351,13 +362,6 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
             {fr.actions.log}
           </button>
           <button
-            className="danger"
-            onClick={() => { if (confirm(`${fr.actions.concede} ?`)) dispatch(concedeGame(state, viewerId)); }}
-            style={{ minHeight: "34px", padding: "4px 8px", fontSize: "11px" }}
-          >
-            {fr.actions.concede}
-          </button>
-          <button
             className="primary"
             disabled={hasPendingForMe || isBotTurn}
             onClick={() => dispatch(endTurn(state, viewerId))}
@@ -366,49 +370,78 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
             {fr.actions.endTurn}
           </button>
         </div>
+        <div style={{ marginTop: "5px", display: "flex", justifyContent: "flex-end" }}>
+          <button
+            onClick={() => { if (confirm(`${fr.actions.concede} ?`)) dispatch(concedeGame(state, viewerId)); }}
+            style={{
+              fontSize: "10px", color: "var(--text-muted)", padding: "2px 8px",
+              minHeight: "22px", background: "transparent",
+              border: "1px solid rgba(255,85,85,0.25)", opacity: 0.8,
+            }}
+          >
+            {fr.actions.concede}
+          </button>
+        </div>
       </div>
 
       {/* HAND */}
       <div style={{
-        flex: 1,
+        flexShrink: 0,
         display: "flex",
         flexDirection: "column",
         padding: "8px",
         paddingBottom: "calc(8px + env(safe-area-inset-bottom, 0px))",
         background: "var(--bg)",
-        minHeight: 0,
       }}>
         <div style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "5px", flexShrink: 0 }}>
           {fr.ui.hand} — {player.name} ({fr.ui.turn} {state.turnNumber})
         </div>
-        <div style={{ overflowX: "auto", flex: 1, display: "flex", alignItems: "flex-start" }}>
-          <div style={{ display: "flex", gap: "7px", flexWrap: "nowrap", paddingBottom: "4px" }}>
-            {player.hand.map((card) => (
-              <div key={card.instanceId} style={{ position: "relative" }}>
-                <CardView
-                  card={card}
-                  playable={!hasPendingForMe && !isBotTurn}
-                  onClick={() => handleCardClick(card)}
-                />
-                {!hasPendingForMe && !isBotTurn && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); dispatch(playCard(state, viewerId, card.instanceId)); }}
-                    style={{
-                      position: "absolute", bottom: "3px", left: "50%", transform: "translateX(-50%)",
-                      fontSize: "9px", background: "var(--accent)", color: "#fff",
-                      padding: "0 5px", borderRadius: "3px", fontWeight: "bold",
-                      border: "none", cursor: "pointer", whiteSpace: "nowrap",
-                    }}
-                  >{fr.ui.playBadge}</button>
-                )}
-              </div>
-            ))}
-            {player.hand.length === 0 && (
-              <div style={{ color: "var(--text-muted)", fontSize: "12px", padding: "16px 0" }}>
-                {fr.ui.handEmpty}
-              </div>
-            )}
+        <div style={{ position: "relative" }}>
+          <div style={{ overflowX: "auto" }}>
+            <div style={{ display: "flex", gap: "7px", flexWrap: "nowrap", paddingBottom: "4px" }}>
+              {player.hand.map((card) => (
+                <div key={card.instanceId} style={{ position: "relative" }}>
+                  <CardView
+                    card={card}
+                    playable={!hasPendingForMe && !isBotTurn}
+                    onClick={() => handleCardClick(card)}
+                  />
+                  {!hasPendingForMe && !isBotTurn && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); dispatch(playCard(state, viewerId, card.instanceId)); }}
+                      style={{
+                        position: "absolute", bottom: "3px", left: "50%", transform: "translateX(-50%)",
+                        fontSize: "9px", background: "var(--accent)", color: "#fff",
+                        padding: "0 5px", borderRadius: "3px", fontWeight: "bold",
+                        border: "none", cursor: "pointer", whiteSpace: "nowrap",
+                      }}
+                    >{fr.ui.playBadge}</button>
+                  )}
+                </div>
+              ))}
+              {player.hand.length === 0 && (
+                <div style={{ color: "var(--text-muted)", fontSize: "13px", padding: "14px 4px", fontStyle: "italic" }}>
+                  {fr.ui.handEmpty}
+                </div>
+              )}
+            </div>
           </div>
+          {player.hand.length > 0 && (
+            <div style={{
+              position: "absolute", right: 0, top: 0, bottom: 0, width: "28px",
+              background: "linear-gradient(to right, transparent, var(--bg))",
+              pointerEvents: "none",
+              zIndex: 1,
+            }} />
+          )}
+          {isBotTurn && (
+            <div style={{
+              position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+              background: "rgba(0,0,0,0.45)",
+              pointerEvents: "none",
+              borderRadius: "4px",
+            }} />
+          )}
         </div>
       </div>
 

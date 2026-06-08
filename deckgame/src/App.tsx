@@ -17,8 +17,9 @@ function StartScreen({ onStart }: { onStart: (p1: string, p2: string, mode: Game
 
   return (
     <div style={{
-      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-      height: "100%", gap: "20px", padding: "24px",
+      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start",
+      height: "100%", gap: "18px", padding: "24px",
+      paddingTop: "max(48px, 10%)",
     }}>
       <h1 style={{ fontSize: "28px", fontWeight: "bold", color: "var(--accent)" }}>{fr.startScreen.title}</h1>
       <p style={{ color: "var(--text-muted)", textAlign: "center", maxWidth: "320px" }}>

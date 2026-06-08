@@ -76,6 +76,7 @@ export const fr = {
     playBadge: "JOUER",
     waiting: "En attente…",
     handEmpty: "Main vide — terminez le tour pour piocher.",
+    inPlayEmpty: "Aucune carte en jeu.",
     noEvents: "Aucun événement.",
     gameOver: "PARTIE TERMINÉE",
     winner: "Vainqueur",
