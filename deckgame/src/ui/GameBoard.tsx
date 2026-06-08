@@ -21,6 +21,7 @@ import { resolvePendingChoice } from "../game/engine";
 import { fr } from "../i18n";
 import type { GameMode } from "./gameMode";
 import { runBotTurn } from "../game/bot";
+import { useOrientation } from "../hooks/useOrientation";
 
 interface Props {
   initialState: GameState;
@@ -51,6 +52,7 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
   const player = state.players[viewerId];
   const opponent = state.players[viewerId === "player_1" ? "player_2" : "player_1"];
   const isBotTurn = gameMode === "solo_bot" && state.currentPlayerId === "player_2";
+  const orientation = useOrientation();
 
   function dispatch(result: ReturnType<typeof playCard>) {
     if (result.ok) {
@@ -79,10 +81,13 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
   const canAttackDirect = opponentOutposts.length === 0;
 
   return (
-    <div style={{
-      display: "flex", flexDirection: "column", height: "100%",
-      background: "var(--bg)", overflow: "hidden",
-    }}>
+    <div
+      data-layout={orientation}
+      style={{
+        display: "flex", flexDirection: "column", height: "100%",
+        background: "var(--bg)", overflow: "hidden",
+      }}
+    >
       {/* BOT TURN BANNER */}
       {isBotTurn && (
         <div style={{

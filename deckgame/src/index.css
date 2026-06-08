@@ -75,3 +75,19 @@ button.warning { background: #aa5500; border-color: #cc7700; color: #fff; }
 .faction-star_empire { color: var(--empire); }
 .faction-trade_federation { color: var(--federation); }
 .faction-unaligned { color: var(--unaligned); }
+
+/* =========================================================
+   LAYOUT RESPONSIVE — PATCH 0039 scaffold, layout activé en PATCH 0040
+   ========================================================= */
+
+/* Portrait : layout actuel, inchangé */
+[data-layout="portrait"] {
+  /* Toutes les règles portrait restent dans les composants inline */
+}
+
+/* Paysage : override des variables CSS pour cartes compactes.
+   Le layout plateau sera implémenté en PATCH 0040. */
+[data-layout="landscape"] {
+  --card-w: 68px;   /* portrait : 80px */
+  --card-h: 90px;   /* portrait : 112px */
+}

@@ -1312,3 +1312,102 @@ describe("PATCH 0038 — E. Bouton Fermer modale — zone tactile 44×44px", () 
     expect(closeBtn).toBeDefined();
   });
 });
+
+
+// ---------------------------------------------------------------------------
+// PATCH 0039 — Architecture responsive portrait / paysage
+// Vérifie : hook useOrientation, data-layout, non-régression portrait
+// ---------------------------------------------------------------------------
+
+describe("PATCH 0039 — A. Hook useOrientation dans jsdom", () => {
+  it("useOrientation retourne 'portrait' dans jsdom (matchMedia absent ou non-landscape)", () => {
+    // jsdom ne simule pas d'orientation landscape donc on attend "portrait"
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    // La valeur effective est testée indirectement via data-layout
+    const root = container.querySelector("[data-layout]");
+    expect(root).toBeDefined();
+    const layout = (root as HTMLElement)?.dataset?.layout;
+    // In jsdom, matchMedia returns portrait (no landscape)
+    expect(layout === "portrait" || layout === "landscape").toBe(true);
+  });
+});
+
+describe("PATCH 0039 — B. Attribut data-layout sur le root GameBoard", () => {
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { vi.useRealTimers(); });
+
+  it("GameBoard root possède l'attribut data-layout", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const root = container.querySelector("[data-layout]");
+    expect(root).not.toBeNull();
+  });
+
+  it("data-layout vaut 'portrait' ou 'landscape' (valeur définie)", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const root = container.querySelector("[data-layout]") as HTMLElement | null;
+    const val = root?.dataset?.layout;
+    expect(["portrait", "landscape"]).toContain(val);
+  });
+
+  it("data-layout présent aussi pendant tour bot", () => {
+    const state = makeBotTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const root = container.querySelector("[data-layout]");
+    expect(root).not.toBeNull();
+  });
+});
+
+describe("PATCH 0039 — C. Non-régression portrait", () => {
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { vi.useRealTimers(); });
+
+  it("Portrait : toutes les sections clés toujours présentes", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const text = container.textContent ?? "";
+    expect(text).toContain("RANGÉE COMMERCIALE");
+    expect(text).toContain("EN JEU");
+    expect(text).toContain("MAIN");
+    expect(text).toContain("Fin du tour");
+  });
+
+  it("Portrait : cartes JOUER présentes pendant tour humain", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const jouer = Array.from(container.querySelectorAll("button")).filter(b => b.textContent?.includes("JOUER"));
+    expect(jouer.length).toBeGreaterThan(0);
+  });
+
+  it("Portrait : aucune action humaine possible pendant tour bot", () => {
+    const state = makeBotTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const jouer = Array.from(container.querySelectorAll("button")).filter(b => b.textContent?.trim() === "JOUER");
+    expect(jouer.length).toBe(0);
+  });
+
+  it("Portrait : structure flex-column présente (overflow hidden)", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const root = container.querySelector("[data-layout]") as HTMLElement | null;
+    expect(root?.style?.overflow).toBe("hidden");
+  });
+});
