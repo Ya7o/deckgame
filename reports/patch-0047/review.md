@@ -1,7 +1,7 @@
 # PATCH 0047 — Corrections mobile/PWA critiques
 
 **Date :** 2026-06-08
-**Commit :** à renseigner après push
+**Commit :** c00af90
 **Branche :** master
 **Tests unitaires :** 268 / 268 GREEN
 **Playwright :** 8 / 8 GREEN
