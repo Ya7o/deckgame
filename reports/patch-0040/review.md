@@ -1,6 +1,6 @@
 # PATCH 0040 — Créer le layout plateau paysage
 
-**Commit :** à renseigner après push
+**Commit :** `8463565`
 **Date :** 2026-06-08
 **Branche :** master
 **Type :** code / QA / doc
