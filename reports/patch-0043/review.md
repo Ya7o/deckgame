@@ -1,7 +1,7 @@
 # PATCH 0043 — Stabiliser le mode paysage post-audit
 
 **Date :** 2026-06-08
-**Commit :** à renseigner après push
+**Commit :** `3a834c8`
 **Branche :** master
 **Tests :** 243 / 243 GREEN
 **Playwright :** 6 / 6 captures OK
