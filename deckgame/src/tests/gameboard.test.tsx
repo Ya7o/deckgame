@@ -1419,7 +1419,6 @@ describe("PATCH 0039 — C. Non-régression portrait", () => {
 // ---------------------------------------------------------------------------
 
 function mockLandscapeMediaQuery() {
-  const original = window.matchMedia;
   vi.stubGlobal("matchMedia", (query: string) => ({
     matches: query.includes("landscape"),
     media: query,
@@ -1525,5 +1524,241 @@ describe("PATCH 0040 — A. Landscape layout activé", () => {
     expect(layout).toBe("portrait");
     expect(container.textContent).toContain("MAIN");
     expect(container.textContent).toContain("RANGÉE COMMERCIALE");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// PATCH 0041 — Interactions, modales et journal en paysage
+// Vérifie :
+//   A. CardDetailModal maxHeight adapte selon l'orientation
+//   B. PendingChoicePanel maxHeight et padding en paysage
+//   C. GameOverScreen paysage — layout 2 colonnes
+//   D. Journal paysage — bouton fermer 44×44px
+// ---------------------------------------------------------------------------
+
+describe("PATCH 0041 — A. CardDetailModal maxHeight selon orientation", () => {
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
+
+  it("Landscape : maxHeight du panneau modal est 78vh", () => {
+    mockLandscapeMediaQuery();
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    // Open modal by clicking first card
+    const cardEls = container.querySelectorAll("[title]");
+    expect(cardEls.length).toBeGreaterThan(0);
+    fireEvent.click(cardEls[0]);
+    // Modal panel: inner div with maxHeight
+    const panels = Array.from(container.querySelectorAll("div")).filter(
+      (d) => (d as HTMLElement).style.maxHeight === "78vh"
+    );
+    expect(panels.length).toBeGreaterThan(0);
+  });
+
+  it("Portrait : maxHeight du panneau modal reste 65vh (non-régression)", () => {
+    // No landscape mock — jsdom defaults to portrait
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const cardEls = container.querySelectorAll("[title]");
+    expect(cardEls.length).toBeGreaterThan(0);
+    fireEvent.click(cardEls[0]);
+    const panels = Array.from(container.querySelectorAll("div")).filter(
+      (d) => (d as HTMLElement).style.maxHeight === "65vh"
+    );
+    expect(panels.length).toBeGreaterThan(0);
+  });
+});
+
+describe("PATCH 0041 — B. PendingChoicePanel paysage", () => {
+  afterEach(() => { vi.unstubAllGlobals(); });
+
+  it("Landscape : aucun crash quand aucun choix en attente (hook avant early return)", () => {
+    mockLandscapeMediaQuery();
+    const state = makeHumanTurnState(); // no pending choices
+    expect(() => {
+      render(
+        React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+      );
+    }).not.toThrow();
+  });
+
+  it("Landscape : maxHeight du panneau est 88vh quand un choix est actif", () => {
+    mockLandscapeMediaQuery();
+    const base = makeHumanTurnState();
+    const stateWithChoice = {
+      ...base,
+      pendingChoices: [
+        {
+          id: "discard-test",
+          type: "opponent_discard" as const,
+          playerId: "player_1" as const,
+          sourceCardInstanceId: "",
+          optional: false as const,
+          candidateIds: base.players.player_1.hand.map((c) => c.instanceId),
+          amount: 1,
+        },
+      ],
+    };
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: stateWithChoice, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const panels = Array.from(container.querySelectorAll("div")).filter(
+      (d) => (d as HTMLElement).style.maxHeight === "88vh"
+    );
+    expect(panels.length).toBeGreaterThan(0);
+  });
+
+  it("Landscape : padding du wrapper PendingChoicePanel est 8px", () => {
+    mockLandscapeMediaQuery();
+    const base = makeHumanTurnState();
+    const stateWithChoice = {
+      ...base,
+      pendingChoices: [
+        {
+          id: "discard-padding-test",
+          type: "opponent_discard" as const,
+          playerId: "player_1" as const,
+          sourceCardInstanceId: "",
+          optional: false as const,
+          candidateIds: base.players.player_1.hand.map((c) => c.instanceId),
+          amount: 1,
+        },
+      ],
+    };
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: stateWithChoice, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    // Outer wrapper (position:fixed, inset:0) of PendingChoicePanel
+    const wrapper = Array.from(container.querySelectorAll("div")).find(
+      (d) => (d as HTMLElement).style.position === "fixed" && (d as HTMLElement).style.padding === "8px"
+    );
+    expect(wrapper).toBeDefined();
+  });
+});
+
+describe("PATCH 0041 — C. GameOverScreen paysage", () => {
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
+
+  it("Landscape : GameOverScreen a data-layout='landscape'", () => {
+    mockLandscapeMediaQuery();
+    const rand = mulberry32(42);
+    const base = setupGame({ player1Name: "Alice", player2Name: "Bot", rand });
+    const gameOverState = {
+      ...base,
+      phase: "game_over" as const,
+      winner: "player_1" as const,
+      gameOverReason: "authority_depleted" as const,
+    };
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: gameOverState, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const landscapeRoot = container.querySelector("[data-layout='landscape']");
+    expect(landscapeRoot).not.toBeNull();
+  });
+
+  it("Landscape : GameOverScreen affiche le nom du gagnant", () => {
+    mockLandscapeMediaQuery();
+    const rand = mulberry32(42);
+    const base = setupGame({ player1Name: "Alice", player2Name: "Bot", rand });
+    const gameOverState = {
+      ...base,
+      phase: "game_over" as const,
+      winner: "player_1" as const,
+      gameOverReason: "authority_depleted" as const,
+    };
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: gameOverState, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    expect(container.textContent).toContain("Alice");
+  });
+
+  it("Landscape : GameOverScreen affiche le bouton Nouvelle partie", () => {
+    mockLandscapeMediaQuery();
+    const rand = mulberry32(42);
+    const base = setupGame({ player1Name: "Alice", player2Name: "Bot", rand });
+    const gameOverState = {
+      ...base,
+      phase: "game_over" as const,
+      winner: "player_1" as const,
+      gameOverReason: "authority_depleted" as const,
+    };
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: gameOverState, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const newGameBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.toLowerCase().includes("nouvelle"));
+    expect(newGameBtn).toBeDefined();
+  });
+
+  it("Landscape : GameOverScreen layout est flexDirection row (2 colonnes)", () => {
+    mockLandscapeMediaQuery();
+    const rand = mulberry32(42);
+    const base = setupGame({ player1Name: "Alice", player2Name: "Bot", rand });
+    const gameOverState = {
+      ...base,
+      phase: "game_over" as const,
+      winner: "player_1" as const,
+      gameOverReason: "authority_depleted" as const,
+    };
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: gameOverState, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const rowDiv = Array.from(container.querySelectorAll("div")).find(
+      (d) => (d as HTMLElement).style.flexDirection === "row" && (d as HTMLElement).style.height === "100%"
+    );
+    expect(rowDiv).toBeDefined();
+  });
+
+  it("Portrait game-over non régressé : layout column, pas de data-layout=landscape", () => {
+    // No landscape mock
+    const rand = mulberry32(42);
+    const base = setupGame({ player1Name: "Alice", player2Name: "Bot", rand });
+    const gameOverState = {
+      ...base,
+      phase: "game_over" as const,
+      winner: "player_1" as const,
+      gameOverReason: "authority_depleted" as const,
+    };
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: gameOverState, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    expect(container.textContent).toContain("PARTIE TERMIN");
+    expect(container.textContent).toContain("Alice");
+    // No landscape data-layout on GameOverScreen in portrait
+    const landscapeRoot = container.querySelector("[data-layout='landscape']");
+    expect(landscapeRoot).toBeNull();
+  });
+});
+
+describe("PATCH 0041 — D. Journal paysage — bouton fermer 44×44px", () => {
+  afterEach(() => { vi.unstubAllGlobals(); });
+
+  it("Landscape : bouton ✕ du journal a minWidth et minHeight >= 44px", () => {
+    mockLandscapeMediaQuery();
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    // Find and click the Journal button in landscape
+    const journalBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.toLowerCase().includes("journal"));
+    expect(journalBtn).toBeDefined();
+    if (journalBtn) {
+      fireEvent.click(journalBtn);
+      // Find close button in the journal panel (✕)
+      const closeBtn = Array.from(container.querySelectorAll("button"))
+        .find(b => b.textContent?.includes("✕") && (b as HTMLElement).style.minWidth === "44px");
+      expect(closeBtn).toBeDefined();
+      if (closeBtn) {
+        const style = (closeBtn as HTMLElement).style;
+        expect(style.minWidth).toBe("44px");
+        expect(style.minHeight).toBe("44px");
+      }
+    }
   });
 });

@@ -353,7 +353,7 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
           <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 50, borderTop: "2px solid var(--border)", background: "var(--surface)", padding: "6px 8px", maxHeight: "45%", overflowY: "auto" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
               <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "bold" }}>Journal</span>
-              <button onClick={() => setShowLog(false)} style={{ minWidth: "30px", minHeight: "30px", padding: "0", fontSize: "14px" }}>✕</button>
+              <button onClick={() => setShowLog(false)} style={{ minWidth: "44px", minHeight: "44px", padding: "0", fontSize: "16px", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
             </div>
             <GameLog entries={state.log} maxHeight={120} />
           </div>
@@ -821,6 +821,43 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
 
 function GameOverScreen({ state, onNewGame }: { state: GameState; onNewGame: () => void }) {
   const winner = state.winner ? state.players[state.winner] : null;
+  const orientation = useOrientation();
+
+  if (orientation === "landscape") {
+    return (
+      <div data-layout="landscape" style={{
+        display: "flex", flexDirection: "row", height: "100%",
+        background: "var(--bg)", overflow: "hidden",
+      }}>
+        {/* Left: result + CTA */}
+        <div style={{
+          flex: "0 0 300px", display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center",
+          padding: "20px", gap: "12px", borderRight: "1px solid var(--border)",
+        }}>
+          <div style={{ fontSize: "20px", fontWeight: "bold", letterSpacing: "1px", textAlign: "center" }}>
+            {fr.ui.gameOver}
+          </div>
+          {winner && (
+            <div style={{ color: "var(--success)", fontSize: "15px", textAlign: "center" }}>
+              {fr.ui.winner} : {winner.name}
+            </div>
+          )}
+          <div style={{ color: "var(--text-muted)", fontSize: "12px", textAlign: "center" }}>
+            {state.gameOverReason === "concede" ? fr.ui.concessionReason : fr.ui.depletionReason}
+          </div>
+          <button className="primary" onClick={onNewGame} style={{ marginTop: "4px" }}>
+            {fr.actions.newGame}
+          </button>
+        </div>
+        {/* Right: game log */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "12px" }}>
+          <GameLog entries={state.log} maxHeight={330} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{
       display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",

@@ -1,6 +1,7 @@
 import type { CardInstance, GameState } from "../game/types";
 import { getCardDef } from "../data/cards";
 import { fr, getCardNameFr, renderEffectFr } from "../i18n";
+import { useOrientation } from "../hooks/useOrientation";
 
 interface Props {
   card: CardInstance;
@@ -17,9 +18,12 @@ export function CardDetailModal({ card, state, onClose, onPlay, onBuy, onActivat
   const def = getCardDef(card.definitionId);
   const playerId = state.currentPlayerId;
   const player = state.players[playerId];
+  const orientation = useOrientation();
 
   const hasSelfScrap = def.scrapEffects.some(e => e.type === "self_scrap");
   const canAttack = onAttackBase !== undefined;
+  // In landscape (390px height), use 78% to give more room for effects
+  const modalMaxH = orientation === "landscape" ? "78vh" : "65vh";
 
   return (
     <div
@@ -40,7 +44,7 @@ export function CardDetailModal({ card, state, onClose, onPlay, onBuy, onActivat
           paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px))",
           width: "100%",
           maxWidth: "500px",
-          maxHeight: "65vh",
+          maxHeight: modalMaxH,
           overflowY: "auto",
         }}
       >

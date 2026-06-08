@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { GameState, PendingChoice, PlayerId, Effect } from "../game/types";
 import type { ChoicePayload } from "../game/choices";
 import { CardView } from "./CardView";
+import { useOrientation } from "../hooks/useOrientation";
 import { fr, renderEffectFr } from "../i18n";
 
 interface Props {
@@ -11,26 +12,30 @@ interface Props {
 }
 
 export function PendingChoicePanel({ state, viewerId, onResolve }: Props) {
+  // useOrientation must be called before any conditional return (Rules of Hooks)
+  const orientation = useOrientation();
   const myChoices = state.pendingChoices.filter((c) => c.playerId === viewerId);
   if (myChoices.length === 0) return null;
 
   const choice = myChoices[0];
+  // In landscape (390px), use 88% to maximize usable height
+  const panelMaxH = orientation === "landscape" ? "88vh" : "80vh";
 
   return (
     <div style={{
       position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)",
       display: "flex", alignItems: "center", justifyContent: "center",
       zIndex: 200,
-      padding: "16px",
+      padding: orientation === "landscape" ? "8px" : "16px",
     }}>
       <div style={{
         background: "var(--surface)",
         border: "1px solid var(--accent)",
         borderRadius: "12px",
-        padding: "16px",
+        padding: "12px",
         width: "100%",
         maxWidth: "500px",
-        maxHeight: "80vh",
+        maxHeight: panelMaxH,
         overflowY: "auto",
       }}>
         <ChoiceResolver choice={choice} state={state} onResolve={onResolve} />
