@@ -1,7 +1,7 @@
 # PATCH 0045 — Plein écran mobile et PWA
 
 **Date :** 2026-06-08
-**Commit :** à renseigner après push
+**Commit :** `81c85d6`
 **Branche :** master
 **Tests :** 264 / 264 GREEN
 **Playwright :** 8 / 8
