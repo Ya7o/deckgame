@@ -1,7 +1,7 @@
 # PATCH 0041 — Adapter interactions, modales et journal au paysage
 
 **Date :** 2026-06-08
-**Commit :** à renseigner après push
+**Commit :** `304606d`
 **Branche :** master
 **Tests :** 236 / 236 GREEN
 **Playwright :** 10 / 10 captures paysage OK
