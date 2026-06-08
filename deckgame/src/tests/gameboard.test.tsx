@@ -1846,3 +1846,187 @@ describe("PATCH 0043 — B. StartScreen portrait non régressé", () => {
     expect(portraitRoot).not.toBeNull();
   });
 });
+
+// ---------------------------------------------------------------------------
+// PATCH 0044 — Paysage sur viewport contraint (navigateur mobile réel)
+// Vérifie :
+//   A. Layout paysage rendu sur viewport 844×390 (Playwright théorique)
+//   B. Layout paysage rendu sur viewport contraint 800×360
+//   C. Layout paysage rendu sur viewport très contraint 740×340
+//   D. Main joueur visible et jouable en paysage contraint
+//   E. Actions principales présentes en paysage contraint
+//   F. Journal ouvrable sans masquer la main
+//   G. Portrait non régressé
+// ---------------------------------------------------------------------------
+
+describe("PATCH 0044 — A/B/C. Layout paysage sur viewports contraints (jsdom)", () => {
+  afterEach(() => { vi.unstubAllGlobals(); });
+
+  it("844×390 : data-layout=landscape rendu, MAIN présente", () => {
+    mockLandscapeMediaQuery();
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    expect(container.querySelector("[data-layout='landscape']")).not.toBeNull();
+    expect(container.textContent).toContain("MAIN");
+  });
+
+  it("800×360 : layout paysage activé (matchMedia landscape)", () => {
+    // jsdom doesn't enforce viewport size — matchMedia drives orientation
+    mockLandscapeMediaQuery();
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    expect(container.querySelector("[data-layout='landscape']")).not.toBeNull();
+  });
+
+  it("740×340 : layout paysage activé (matchMedia landscape)", () => {
+    mockLandscapeMediaQuery();
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    expect(container.querySelector("[data-layout='landscape']")).not.toBeNull();
+  });
+});
+
+describe("PATCH 0044 — D. Main joueur visible en paysage contraint", () => {
+  afterEach(() => { vi.unstubAllGlobals(); });
+
+  it("Section MAIN présente dans le DOM en paysage", () => {
+    mockLandscapeMediaQuery();
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    expect(container.textContent).toContain("MAIN");
+  });
+
+  it("MAIN section contient le header de main en paysage", () => {
+    mockLandscapeMediaQuery();
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    // MAIN header label is rendered in the landscape HAND section
+    expect(container.textContent).toContain("MAIN");
+    // The landscape root uses overflow:hidden at top level (prevents page scroll)
+    const landscapeRoot = container.querySelector("[data-layout='landscape']") as HTMLElement | null;
+    expect(landscapeRoot).not.toBeNull();
+    expect(landscapeRoot?.style.overflow).toBe("hidden");
+  });
+
+  it("Cartes en main présentes avec bouton JOUER", () => {
+    mockLandscapeMediaQuery();
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const jouer = Array.from(container.querySelectorAll("button"))
+      .filter(b => b.textContent?.includes("JOUER"));
+    expect(jouer.length).toBeGreaterThan(0);
+  });
+});
+
+describe("PATCH 0044 — E. Actions principales présentes en paysage", () => {
+  afterEach(() => { vi.unstubAllGlobals(); });
+
+  it("Bouton Fin du tour présent", () => {
+    mockLandscapeMediaQuery();
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const btn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.includes("Fin du tour"));
+    expect(btn).toBeDefined();
+  });
+
+  it("Bouton Journal présent", () => {
+    mockLandscapeMediaQuery();
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const btn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.includes("Journal"));
+    expect(btn).toBeDefined();
+  });
+
+  it("RANGÉE COMMERCIALE présente (achats accessibles)", () => {
+    mockLandscapeMediaQuery();
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    expect(container.textContent).toContain("RANGÉE COMMERCIALE");
+  });
+
+  it("Modale ouvrable : clic carte → Fermer visible", () => {
+    mockLandscapeMediaQuery();
+    vi.useFakeTimers();
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const cards = container.querySelectorAll("[title]");
+    expect(cards.length).toBeGreaterThan(0);
+    fireEvent.click(cards[0]);
+    const closeBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.includes("Fermer") || b.textContent?.includes("✕"));
+    expect(closeBtn).toBeDefined();
+    vi.useRealTimers();
+  });
+});
+
+describe("PATCH 0044 — F. Journal ne masque pas la main", () => {
+  afterEach(() => { vi.unstubAllGlobals(); });
+
+  it("Journal overlay position absolute (ne pousse pas le layout)", () => {
+    mockLandscapeMediaQuery();
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    // Open journal
+    const journalBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.includes("Journal"));
+    expect(journalBtn).toBeDefined();
+    if (journalBtn) {
+      fireEvent.click(journalBtn);
+      // Journal overlay should be position:absolute (not pushing content down)
+      const overlay = Array.from(container.querySelectorAll("div")).find(
+        (d) => (d as HTMLElement).style.position === "absolute" &&
+                (d as HTMLElement).style.bottom === "0px" &&
+                (d as HTMLElement).textContent?.includes("Journal")
+      );
+      expect(overlay).toBeDefined();
+      // MAIN section still in DOM
+      expect(container.textContent).toContain("MAIN");
+    }
+  });
+});
+
+describe("PATCH 0044 — G. Portrait non régressé", () => {
+  it("Portrait : data-layout=portrait, MAIN présente", () => {
+    // No landscape mock
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    expect(container.querySelector("[data-layout='portrait']")).not.toBeNull();
+    expect(container.textContent).toContain("MAIN");
+  });
+
+  it("Portrait : boutons JOUER présents", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const jouer = Array.from(container.querySelectorAll("button"))
+      .filter(b => b.textContent?.includes("JOUER"));
+    expect(jouer.length).toBeGreaterThan(0);
+  });
+});

@@ -88,6 +88,6 @@ button.warning { background: #aa5500; border-color: #cc7700; color: #fff; }
 /* Paysage : override des variables CSS pour cartes compactes.
    Le layout plateau sera implémenté en PATCH 0040. */
 [data-layout="landscape"] {
-  --card-w: 68px;   /* portrait : 80px */
-  --card-h: 90px;   /* portrait : 112px */
+  --card-w: 64px;   /* portrait : 80px — réduit pour viewport contraint */
+  --card-h: 76px;   /* portrait : 112px — réduit pour viewport contraint */
 }

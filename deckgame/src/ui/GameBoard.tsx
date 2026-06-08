@@ -106,7 +106,7 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
 
         {/* LANDSCAPE — Opponent zone (compact row) */}
         <div style={{
-          padding: "5px 10px",
+          padding: "3px 10px",
           background: "var(--surface)",
           borderBottom: "1px solid var(--border)",
           flexShrink: 0,
@@ -148,11 +148,11 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
 
         {/* LANDSCAPE — Trade row */}
         <div style={{
-          padding: "5px 8px 4px 8px",
+          padding: "3px 8px 2px 8px",
           borderBottom: "1px solid var(--border)",
           flexShrink: 0, background: "#12121a", position: "relative",
         }}>
-          <div style={{ fontSize: "10px", color: "var(--text-muted)", marginBottom: "3px" }}>
+          <div style={{ fontSize: "10px", color: "var(--text-muted)", marginBottom: "2px" }}>
             {fr.ui.tradeRow}
             <span style={{ marginLeft: "6px", opacity: 0.7 }}>{fr.ui.tradeDeck} {state.tradeDeck.length}</span>
             <span style={{ marginLeft: "4px", opacity: 0.7 }}>· {fr.ui.explorerPile} {state.explorerPile.length}</span>
@@ -221,8 +221,8 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
         {/* LANDSCAPE — Middle: EN JEU + Resources + Actions */}
         <div style={{ display: "flex", flexDirection: "row", borderBottom: "1px solid var(--border)", flexShrink: 0, background: "#0d0d14" }}>
           {/* Left: EN JEU micro */}
-          <div style={{ flex: 1, padding: "4px 6px", overflowX: "auto", display: "flex", flexDirection: "column", minWidth: 0 }}>
-            <div style={{ fontSize: "9px", color: "var(--text-muted)", marginBottom: "2px", flexShrink: 0 }}>{fr.ui.inPlay}</div>
+          <div style={{ flex: 1, padding: "3px 6px", overflowX: "auto", display: "flex", flexDirection: "column", minWidth: 0 }}>
+            <div style={{ fontSize: "9px", color: "var(--text-muted)", marginBottom: "1px", flexShrink: 0 }}>{fr.ui.inPlay}</div>
             <div style={{ display: "flex", gap: "4px", flexWrap: "nowrap", alignItems: "flex-start" }}>
               {(player.inPlay.length > 0 || player.bases.length > 0) ? (
                 <>
@@ -230,7 +230,7 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
                     const def = getCardDef(card.definitionId);
                     const hasSelfScrap = def.scrapEffects.some(e => e.type === "self_scrap");
                     return (
-                      <div key={card.instanceId} style={{ position: "relative", "--card-w": "48px", "--card-h": "54px" } as React.CSSProperties}>
+                      <div key={card.instanceId} style={{ position: "relative", "--card-w": "46px", "--card-h": "48px" } as React.CSSProperties}>
                         <CardView card={card} onClick={() => handleCardClick(card)} />
                         {hasSelfScrap && !hasPendingForMe && !isBotTurn && (
                           <div onClick={(e) => { e.stopPropagation(); dispatch(activateSelfScrap(state, viewerId, card.instanceId)); }}
@@ -245,7 +245,7 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
                     const def = getCardDef(base.definitionId);
                     const hasSelfScrap = def.scrapEffects.some(e => e.type === "self_scrap");
                     return (
-                      <div key={base.instanceId} style={{ position: "relative", "--card-w": "48px", "--card-h": "54px" } as React.CSSProperties}>
+                      <div key={base.instanceId} style={{ position: "relative", "--card-w": "46px", "--card-h": "48px" } as React.CSSProperties}>
                         <CardView card={base} onClick={() => handleCardClick(base)} />
                         {hasSelfScrap && !hasPendingForMe && !isBotTurn && (
                           <div onClick={(e) => { e.stopPropagation(); dispatch(activateSelfScrap(state, viewerId, base.instanceId)); }}
@@ -268,7 +268,7 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
           <div style={{ width: "1px", background: "var(--border)", alignSelf: "stretch" }} />
 
           {/* Right: Resources + Actions */}
-          <div style={{ flexShrink: 0, padding: "4px 8px", display: "flex", flexDirection: "column", gap: "4px", justifyContent: "center" }}>
+          <div style={{ flexShrink: 0, padding: "3px 8px", display: "flex", flexDirection: "column", gap: "3px", justifyContent: "center" }}>
             <div style={{ display: "flex", gap: "6px", alignItems: "center", flexWrap: "wrap" }}>
               <span style={{ color: "var(--authority)", fontWeight: "bold", fontSize: "11px" }}>♥ {player.authority}</span>
               <span style={{ color: "var(--trade)", fontWeight: "bold", fontSize: "11px" }}>{fr.resources.trade}: {player.currentTrade}</span>
@@ -306,8 +306,8 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
         </div>
 
         {/* LANDSCAPE — HAND (bottom, always visible) */}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "5px 8px", paddingBottom: "calc(5px + env(safe-area-inset-bottom, 0px))", background: "var(--bg)", overflow: "hidden", minHeight: 0 }}>
-          <div style={{ fontSize: "10px", color: "var(--text-muted)", marginBottom: "3px", flexShrink: 0 }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "3px 8px", paddingBottom: "calc(3px + env(safe-area-inset-bottom, 0px))", background: "var(--bg)", overflow: "hidden", minHeight: 0 }}>
+          <div style={{ fontSize: "10px", color: "var(--text-muted)", marginBottom: "2px", flexShrink: 0 }}>
             {fr.ui.hand} — {player.name} ({fr.ui.turn} {state.turnNumber})
             {player.hand.length > 0 && (
               <span style={{ marginLeft: "5px", opacity: 0.7 }}>
