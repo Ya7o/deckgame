@@ -1,7 +1,7 @@
 # PATCH 0048 — Accessibilité + confort tactile
 
 **Date :** 2026-06-08
-**Commit :** à renseigner après push
+**Commit :** ba1d474
 **Branche :** master
 **Tests unitaires :** 274 / 274 GREEN
 **Playwright :** 9 / 9 GREEN
