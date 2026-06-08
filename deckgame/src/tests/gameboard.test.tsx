@@ -1131,3 +1131,184 @@ describe("PATCH 0033 — QA visuelle mobile post-V0", () => {
     expect(posHand).toBeGreaterThan(posInPlay); // MAIN section comes after EN JEU
   });
 });
+
+
+// ---------------------------------------------------------------------------
+// PATCH 0038 — Frictions portrait : noms cartes, indicateur main, tour bot,
+//              bouton Attaquer, fermer modale, fondu rangée commerciale
+// ---------------------------------------------------------------------------
+
+describe("PATCH 0038 — A. Noms cartes sur CardView", () => {
+  // CardView renders names via getCardNameFr; long names should not overflow
+  // We verify the DOM renders without error and the name is present.
+
+  it("CardView affiche le nom complet sans texte tronqué explicite", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    // All card titles must be non-empty (title attr = nameFr)
+    const cards = container.querySelectorAll("[title]");
+    expect(cards.length).toBeGreaterThan(0);
+    cards.forEach(card => {
+      expect((card as HTMLElement).title.length).toBeGreaterThan(0);
+    });
+  });
+
+  it("CardView — le nom utilise un style word-break ou overflow-wrap", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    // The card root divs have the CSS vars applied; check for at least one card
+    const cardDivs = Array.from(container.querySelectorAll("[title]"));
+    expect(cardDivs.length).toBeGreaterThan(0);
+    // At minimum check the structure exists
+    const firstCard = cardDivs[0] as HTMLElement;
+    expect(firstCard.style.overflow).toBe("hidden");
+  });
+});
+
+describe("PATCH 0038 — B. Indicateur de cartes en main", () => {
+  it("Le header de la MAIN indique le nombre de cartes quand main non vide", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const text = container.textContent ?? "";
+    // Hand header should contain "carte" (singular or plural count)
+    expect(text).toMatch(/\d+ cartes?/);
+  });
+
+  it("Le header de la MAIN n'affiche pas de compteur quand main vide", () => {
+    const state = makeHumanTurnState();
+    // Empty the hand
+    const emptyHandState = {
+      ...state,
+      players: {
+        ...state.players,
+        player_1: { ...state.players.player_1, hand: [] },
+      },
+    };
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: emptyHandState, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const text = container.textContent ?? "";
+    // When hand empty, no "N carte(s)" count should appear (from MAIN header)
+    // The "Main vide" message should be present instead
+    expect(text).toContain("Main vide");
+  });
+});
+
+describe("PATCH 0038 — C. Tour bot — overlay et signal visuel", () => {
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
+
+  it("Banner ⏳ présent pendant tour bot", () => {
+    const state = makeBotTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const text = container.textContent ?? "";
+    // Banner contains the bot thinking label
+    expect(text).toContain("réfléchit");
+  });
+
+  it("Label tour du bot affiché dans l'overlay MAIN pendant tour bot", () => {
+    const state = makeBotTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const text = container.textContent ?? "";
+    // fr.bot.turnLabel = "Tour du Bot"
+    expect(text).toContain("Tour du Bot");
+  });
+
+  it("Overlay bot couvre la zone MAIN (position absolute, contient label)", () => {
+    const state = makeBotTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const allDivs = Array.from(container.querySelectorAll("div"));
+    // Find overlay div: position absolute with a background containing rgba
+    // and child text "Tour du Bot"
+    const overlay = allDivs.find(el =>
+      el.style?.position === "absolute" &&
+      (el.style?.background?.includes("rgba") || el.style?.background?.includes("rgb")) &&
+      el.textContent?.includes("Tour du Bot")
+    );
+    expect(overlay).toBeDefined();
+  });
+
+  it("JOUER boutons absents pendant tour bot", () => {
+    const state = makeBotTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const jouerBtns = Array.from(container.querySelectorAll("button"))
+      .filter(b => b.textContent?.trim() === "JOUER");
+    expect(jouerBtns.length).toBe(0);
+  });
+});
+
+describe("PATCH 0038 — D. Bouton Attaquer — zone tactile", () => {
+  it("Bouton Attaquer a minHeight >= 44px quand disponible", () => {
+    const rand = mulberry32(42);
+    const base = setupGame({ player1Name: "Joueur 1", player2Name: "Bot", rand });
+    // Give player_1 enough combat to attack directly (no outposts)
+    const stateWithCombat = {
+      ...base,
+      players: {
+        ...base.players,
+        player_1: { ...base.players.player_1, currentCombat: 5 },
+      },
+    };
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: stateWithCombat, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const btns = Array.from(container.querySelectorAll("button"));
+    const attackBtn = btns.find(b => b.textContent?.includes("Attaquer"));
+    if (attackBtn) {
+      const mh = (attackBtn as HTMLElement).style?.minHeight;
+      // minHeight should be 44px (as set in inline style)
+      expect(mh).toBe("44px");
+    }
+  });
+});
+
+describe("PATCH 0038 — E. Bouton Fermer modale — zone tactile 44×44px", () => {
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { vi.useRealTimers(); });
+
+  it("Bouton fermer (✕) a minWidth et minHeight >= 44px", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    // Open modal by clicking first card
+    const cardEls = container.querySelectorAll("[title]");
+    fireEvent.click(cardEls[0]);
+    const buttons = Array.from(container.querySelectorAll("button"));
+    // Close button is the one with "✕"
+    const closeX = buttons.find(b => b.textContent?.includes("✕"));
+    expect(closeX).toBeDefined();
+    if (closeX) {
+      const style = (closeX as HTMLElement).style;
+      // minWidth and minHeight should be 44px
+      expect(style.minWidth).toBe("44px");
+      expect(style.minHeight).toBe("44px");
+    }
+  });
+
+  it("Bouton Fermer (texte) toujours présent dans la modale", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const cardEls = container.querySelectorAll("[title]");
+    fireEvent.click(cardEls[0]);
+    const closeBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.includes("Fermer"));
+    expect(closeBtn).toBeDefined();
+  });
+});

@@ -86,17 +86,17 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
       {/* BOT TURN BANNER */}
       {isBotTurn && (
         <div style={{
-          padding: "7px 12px",
-          background: "#1e1e35",
+          padding: "10px 16px",
+          background: "#191730",
           borderBottom: "2px solid var(--accent)",
           textAlign: "center",
-          fontSize: "12px",
+          fontSize: "13px",
           color: "var(--accent)",
           fontWeight: "bold",
           flexShrink: 0,
           letterSpacing: "0.5px",
         }}>
-          {fr.bot.thinkingLabel}
+          ⏳ {fr.bot.thinkingLabel}
         </div>
       )}
 
@@ -225,7 +225,7 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
           </div>
         </div>
         <div style={{
-          position: "absolute", right: 0, top: 0, bottom: 0, width: "28px",
+          position: "absolute", right: 0, top: 0, bottom: 0, width: "40px",
           background: "linear-gradient(to right, transparent, #12121a)",
           pointerEvents: "none",
           zIndex: 1,
@@ -342,7 +342,7 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
             <button
               className="danger"
               onClick={() => dispatch(attackOpponent(state, viewerId, player.currentCombat))}
-              style={{ minHeight: "34px", padding: "4px 10px", fontSize: "12px" }}
+              style={{ minHeight: "44px", padding: "4px 10px", fontSize: "12px" }}
             >
               ⚔ {fr.actions.attack} ({player.currentCombat})
             </button>
@@ -395,9 +395,14 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
       }}>
         <div style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "5px", flexShrink: 0 }}>
           {fr.ui.hand} — {player.name} ({fr.ui.turn} {state.turnNumber})
+          {player.hand.length > 0 && (
+            <span style={{ marginLeft: "6px", opacity: 0.7 }}>
+              · {player.hand.length} carte{player.hand.length > 1 ? "s" : ""}
+            </span>
+          )}
         </div>
         <div style={{ position: "relative" }}>
-          <div style={{ overflowX: "auto" }}>
+          <div style={{ overflowX: "auto", ...(isBotTurn ? { filter: "grayscale(40%)", opacity: 0.7 } : {}) }}>
             <div style={{ display: "flex", gap: "7px", flexWrap: "nowrap", paddingBottom: "4px" }}>
               {player.hand.map((card) => (
                 <div key={card.instanceId} style={{ position: "relative" }}>
@@ -426,9 +431,9 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
               )}
             </div>
           </div>
-          {player.hand.length > 0 && (
+          {player.hand.length > 0 && !isBotTurn && (
             <div style={{
-              position: "absolute", right: 0, top: 0, bottom: 0, width: "28px",
+              position: "absolute", right: 0, top: 0, bottom: 0, width: "36px",
               background: "linear-gradient(to right, transparent, var(--bg))",
               pointerEvents: "none",
               zIndex: 1,
@@ -436,11 +441,23 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
           )}
           {isBotTurn && (
             <div style={{
-              position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
-              background: "rgba(0,0,0,0.45)",
+              position: "absolute", inset: 0,
+              background: "rgba(0,0,0,0.60)",
               pointerEvents: "none",
               borderRadius: "4px",
-            }} />
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}>
+              <span style={{
+                fontSize: "11px",
+                color: "var(--text-muted)",
+                fontStyle: "italic",
+                letterSpacing: "0.3px",
+              }}>
+                {fr.bot.turnLabel}
+              </span>
+            </div>
           )}
         </div>
       </div>

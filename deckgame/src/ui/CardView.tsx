@@ -81,7 +81,17 @@ export function CardView({ card, onClick, selected, dimmed, playable, attackable
       </div>
 
       {/* Name */}
-      <div style={{ fontWeight: "bold", fontSize: "10px", lineHeight: 1.2, wordBreak: "break-word" }}>
+      <div style={{
+        fontWeight: "bold",
+        fontSize: "9px",
+        lineHeight: 1.1,
+        overflowWrap: "break-word",
+        wordBreak: "break-word",
+        display: "-webkit-box",
+        WebkitLineClamp: 3,
+        WebkitBoxOrient: "vertical",
+        overflow: "hidden",
+      }}>
         {nameFr}
       </div>
 

@@ -65,7 +65,16 @@ export function CardDetailModal({ card, state, onClose, onPlay, onBuy, onActivat
               {def.isOutpost && <><span>·</span><span style={{ color: "var(--danger)", fontWeight: "bold" }}>AVANT-POSTE</span></>}
             </div>
           </div>
-          <button onClick={onClose} style={{ minHeight: "auto", padding: "6px 10px", fontSize: "14px", flexShrink: 0 }}>✕</button>
+          <button onClick={onClose} style={{
+            minWidth: "44px",
+            minHeight: "44px",
+            padding: "0",
+            fontSize: "18px",
+            flexShrink: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}>✕</button>
         </div>
 
         {/* Effects */}
