@@ -1,11 +1,19 @@
-# Deckgame — Star Realms V0
+# Deckgame — Star Realms V0.1
 
 Prototype jouable de Star Realms (set de base) en React + TypeScript.
+Support mobile/PWA, layout portrait et paysage, mode solo contre bot.
+
+## Jouer
+
+- **En ligne :** https://ya7o.github.io/deckgame/
+- **PWA :** Sur mobile, "Ajouter à l'écran d'accueil" depuis votre navigateur
+- **Plein écran :** Bouton disponible sur l'écran d'accueil (Chromium/Android)
 
 ## Stack technique
 
 - **Frontend** : React 19 + TypeScript + Vite
-- **Tests** : Vitest + Testing Library
+- **Tests** : Vitest + Testing Library (274 tests)
+- **E2E** : Playwright (multi-viewport, mobile/PWA)
 - **Moteur de jeu** : pur TypeScript, immuable (pas de mutation d'état)
 
 ## Lancer le projet
@@ -33,14 +41,20 @@ src/
     simulate.ts          — simulation batch
     draw.ts              — pioche + reshuffle
     utils.ts             — utilitaires (shuffle, moveCard…)
+  hooks/
+    useOrientation.ts    — détection portrait/paysage (matchMedia)
+    useFullscreen.ts     — API Fullscreen + WebKit fallback
   ui/
-    GameBoard.tsx        — composant principal
+    GameBoard.tsx        — composant principal (portrait + paysage)
     CardView.tsx         — carte individuelle
     PendingChoicePanel.tsx — panneau de choix
     CardDetailModal.tsx  — modal détail / action
     GameLog.tsx          — journal de partie
   i18n/fr.ts             — traductions françaises
-  tests/                 — suite de tests (190+ tests)
+  tests/                 — suite de tests (274 tests)
+public/
+  manifest.webmanifest   — manifest PWA (standalone, orientation: any)
+  favicon.svg            — icône SVG
 ```
 
 ## Règles V0 supportées
@@ -48,7 +62,7 @@ src/
 - Toutes les 52 cartes du set de base (11 factions × effets)
 - Effets alliés et effets de récupération (scrap)
 - Mode solo (humain vs bot) et 2 joueurs local
-- 4 profils de bot avec strategies d'achat différentes
+- 4 profils de bot avec stratégies d'achat différentes
 - Simulation batch pour tests d'équilibrage
 
 ## Particularités V0
@@ -57,18 +71,19 @@ src/
 - Pile Explorateur initialisée à 16 instances (limite pratique V0)
 - Reshuffles déterministes si `rand` fourni à `setupGame`
 
-## Version stable
+## Documentation utilisateur
 
-Tag **v0.0.0** sur master — release candidate validée (200 parties, 0 erreur moteur).
+- [Guide utilisateur V0.1](docs/user-guide-v0.1.md)
+- [Guide mobile & PWA](docs/mobile-pwa-guide.md)
 
 ## Historique des patchs
 
-- PATCH 0001–0022 : implémentation du moteur et de l'UI
-- PATCH 0023 : gel du scope V0 + backlog de stabilisation
-- PATCH 0024 : corrections moteur P1 (Dreadnaught, opponent_discard, draw-3)
-- PATCH 0025 : durcissement QA (190 tests, batch 100 parties)
-- PATCH 0026 : stabilisation UX mobile (badge ACTIV., 11 flux vérifiés)
-- PATCH 0027 : cleanup V0 (dette B-07–B-15, README)
-- PATCH 0028 : release candidate V0 (terminé)
-- PATCH 0029 : skipped (aucun bloquant RC)
-- PATCH 0030 : tag v0.0.0 + documentation finale
+- PATCH 0001–0030 : implémentation moteur, UI, release V0 (tag v0.0.0)
+- PATCH 0031–0039 : layout paysage, modal carte, UX compact
+- PATCH 0040–0044 : layout paysage robuste, viewport contraint
+- PATCH 0045 : PWA (manifest, fullscreen, 100dvh)
+- PATCH 0046 : audit multi-viewport (rapport P0/P1/P2/P3)
+- PATCH 0047 : journal portrait close button + fullscreen style
+- PATCH 0048 : touch targets ≥ 44px, aria-labels
+- PATCH 0049 : documentation V0.1
+- PATCH 0050 : tag v0.1.0 (à venir)
