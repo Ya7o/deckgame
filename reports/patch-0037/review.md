@@ -1,6 +1,6 @@
 # PATCH 0037 — Audit comparatif portrait vs paysage
 
-**Commit :** à renseigner après push
+**Commit :** `50e5718`
 **Date :** 2026-06-08
 **Branche :** master
 **Type :** QA / audit / documentation
