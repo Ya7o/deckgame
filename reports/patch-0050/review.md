@@ -1,7 +1,7 @@
 # PATCH 0050 — Tag V0.1.0
 
 **Date :** 2026-06-08
-**Commit :** à renseigner après push
+**Commit :** 793ee42
 **Tag :** `v0.1.0`
 **Branche :** master
 **Tests :** 274 / 274 GREEN
