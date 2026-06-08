@@ -1,10 +1,8 @@
-import { defineConfig, devices } from "@playwright/test";
+import { defineConfig } from "@playwright/test";
 
-// NOTE: Playwright browser installation requires Ubuntu >= 27 or Debian.
-// On Ubuntu 26.04 (this dev environment), npx playwright install chromium
-// fails with "not supported on ubuntu26.04-x64".
-// Tests are written and ready; run once the environment supports it.
-// For live verification on Ubuntu 26.04, see reports/patch-0017.
+// Chromium 149 installed (binary only) on Ubuntu 26.04.
+// WebKit / iPhone 12 preset not available; using Chromium + mobile viewport.
+// App served at http://localhost:5173/deckgame/
 
 export default defineConfig({
   testDir: "./e2e",
@@ -19,7 +17,7 @@ export default defineConfig({
 
   webServer: {
     command: "npm run dev -- --host 0.0.0.0 --port 5173",
-    url: "http://localhost:5173",
+    url: "http://localhost:5173/deckgame/",
     reuseExistingServer: true,
     timeout: 30_000,
   },
@@ -27,7 +25,13 @@ export default defineConfig({
   projects: [
     {
       name: "mobile-portrait",
-      use: { ...devices["iPhone 12"] },
+      use: {
+        browserName: "chromium",
+        viewport: { width: 390, height: 844 },
+        deviceScaleFactor: 3,
+        isMobile: true,
+        hasTouch: true,
+      },
     },
   ],
 });

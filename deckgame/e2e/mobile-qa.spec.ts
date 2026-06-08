@@ -9,7 +9,7 @@ import { test, expect, Page } from "@playwright/test";
 // ---------------------------------------------------------------------------
 
 async function startSoloGame(page: Page) {
-  await page.goto("/");
+  await page.goto("/deckgame/");
   const botBtn = page.getByRole("button", { name: /contre le bot/i });
   if (await botBtn.isVisible()) {
     await botBtn.click();
@@ -20,7 +20,7 @@ async function startSoloGame(page: Page) {
 test.describe("PATCH 0017 - QA mobile portrait", () => {
 
   test("1. ecran de debut de partie visible en mobile", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/deckgame/");
     await expect(page.getByText(/Deckgame/i)).toBeVisible();
     await expect(page.getByRole("button", { name: /contre le bot/i })).toBeVisible();
   });
