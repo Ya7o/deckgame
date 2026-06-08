@@ -1,6 +1,6 @@
 # PATCH 0036 — Audit visuel mobile Playwright post-V0
 
-**Commit :** à renseigner après push
+**Commit :** `1ca0760`
 **Date :** 2026-06-08
 **Branche :** master
 **Type :** QA / audit / documentation
