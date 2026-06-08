@@ -1,7 +1,7 @@
 # PATCH 0046 — Audit réel mobile post-PWA
 
 **Date :** 2026-06-08
-**Commit :** à renseigner après push
+**Commit :** `3d20b31`
 **Branche :** master
 **Tests :** 264 / 264 GREEN (inchangé — aucune modification source)
 **Playwright audit :** 25 / 25
