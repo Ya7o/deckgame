@@ -80,6 +80,8 @@ export const fr = {
     outpostHint: "Avant-poste : protège l'adversaire. Doit être détruit avant toute attaque directe.",
     outpostBlockLandscape: "🛡 Avant-poste bloque l'attaque",
     outpostBlockPortrait: "🛡 Avant-poste adverse — détruisez-le pour attaquer directement",
+    endTurnTitlePending: "Résolvez d'abord le choix en attente",
+    endTurnTitleBot: "Tour du bot en cours…",
     scrapHint: "retire définitivement de la partie",
     glossaryTitle: "Glossaire",
     glossaryBtn: "?",

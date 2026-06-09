@@ -319,6 +319,7 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
             </div>
             <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", alignItems: "center" }}>
               <button className="primary" disabled={hasPendingForMe || isBotTurn}
+                title={hasPendingForMe ? fr.ui.endTurnTitlePending : isBotTurn ? fr.ui.endTurnTitleBot : undefined}
                 onClick={() => dispatch(endTurn(state, viewerId))}
                 style={{ minHeight: "36px", padding: "2px 10px", fontSize: "11px", fontWeight: "bold" }}>
                 {fr.actions.endTurn}
@@ -746,6 +747,7 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
           <button
             className="primary"
             disabled={hasPendingForMe || isBotTurn}
+            title={hasPendingForMe ? fr.ui.endTurnTitlePending : isBotTurn ? fr.ui.endTurnTitleBot : undefined}
             onClick={() => dispatch(endTurn(state, viewerId))}
             style={{ minHeight: "44px", padding: "4px 12px" }}
           >
@@ -773,8 +775,8 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
             onClick={() => { if (confirm(`${fr.actions.concede} ?`)) dispatch(concedeGame(state, viewerId)); }}
             style={{
               fontSize: "10px", color: "var(--text-muted)", padding: "2px 8px",
-              minHeight: "32px", background: "transparent",
-              border: "1px solid rgba(255,85,85,0.25)", opacity: 0.8,
+              minHeight: "22px", background: "transparent",
+              border: "1px solid var(--border)", opacity: 0.6,
             }}
           >
             {fr.actions.concede}

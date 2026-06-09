@@ -2805,3 +2805,108 @@ describe("PATCH 0055 — B. Bases (landscape)", () => {
     expect(container.textContent).toContain("avant-poste");
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PATCH 0056 — Harmoniser la barre d'actions et les boutons critiques
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("PATCH 0056 — A. Hiérarchie boutons portrait", () => {
+  beforeEach(() => { vi.useFakeTimers(); vi.unstubAllGlobals(); });
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+
+  it("Fin du tour : bouton primaire présent et ≥ 44px", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const endBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.trim() === "Fin du tour") as HTMLButtonElement | undefined;
+    expect(endBtn).toBeDefined();
+    expect(parseInt(endBtn!.style.minHeight)).toBeGreaterThanOrEqual(44);
+    expect(endBtn!.className).toContain("primary");
+  });
+
+  it("Abandonner : accessible et hauteur ≤ Fin du tour", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const concedeBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.trim() === "Abandonner") as HTMLButtonElement | undefined;
+    expect(concedeBtn).toBeDefined();
+    // Abandonner should be shorter than Fin du tour (less dominant)
+    expect(parseInt(concedeBtn!.style.minHeight)).toBeLessThan(44);
+  });
+
+  it("Fin du tour désactivé pendant tour bot : title explicatif présent", () => {
+    const state = makeBotTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const endBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.trim() === "Fin du tour") as HTMLButtonElement | undefined;
+    expect(endBtn?.disabled).toBe(true);
+    expect(endBtn?.title).toBeTruthy();
+  });
+
+  it("Bouton Journal présent et accessible", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const journalBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.trim() === "Journal");
+    expect(journalBtn).toBeDefined();
+  });
+});
+
+describe("PATCH 0056 — B. Hiérarchie boutons landscape", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.stubGlobal("matchMedia", (query: string) => ({
+      matches: query.includes("landscape"),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+  });
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+
+  it("Landscape : Fin du tour primaire présent", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const endBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.trim() === "Fin du tour");
+    expect(endBtn).toBeDefined();
+    expect(endBtn?.className).toContain("primary");
+  });
+
+  it("Landscape : Fin du tour désactivé pendant tour bot a title", () => {
+    const state = makeBotTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const endBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.trim() === "Fin du tour") as HTMLButtonElement | undefined;
+    expect(endBtn?.disabled).toBe(true);
+    expect(endBtn?.title).toBeTruthy();
+  });
+
+  it("Landscape : Abandonner présent et moins dominant que Fin du tour", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const concedeBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.trim() === "Abandonner") as HTMLButtonElement | undefined;
+    expect(concedeBtn).toBeDefined();
+    // Should NOT be primary class
+    expect(concedeBtn?.className ?? "").not.toContain("primary");
+  });
+});
