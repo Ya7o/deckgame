@@ -154,10 +154,9 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
           borderBottom: "1px solid var(--border)",
           flexShrink: 0, background: "#12121a", position: "relative",
         }}>
-          <div style={{ fontSize: "10px", color: "var(--text-muted)", marginBottom: "2px" }}>
+          <div style={{ fontSize: "9px", color: "var(--text-muted)", marginBottom: "1px" }}>
             {fr.ui.tradeRow}
-            <span style={{ marginLeft: "6px", opacity: 0.7 }}>{fr.ui.tradeDeck} {state.tradeDeck.length}</span>
-            <span style={{ marginLeft: "4px", opacity: 0.7 }}>· {fr.ui.explorerPile} {state.explorerPile.length}</span>
+            <span style={{ marginLeft: "6px", opacity: 0.7 }}>{fr.ui.tradeDeck} {state.tradeDeck.length} · {fr.ui.explorerPile} {state.explorerPile.length}</span>
           </div>
           <div style={{ overflowX: "auto" }}>
             <div style={{ display: "flex", gap: "5px", flexWrap: "nowrap", alignItems: "flex-start", paddingBottom: "2px" }}>
@@ -232,7 +231,7 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
                     const def = getCardDef(card.definitionId);
                     const hasSelfScrap = def.scrapEffects.some(e => e.type === "self_scrap");
                     return (
-                      <div key={card.instanceId} style={{ position: "relative", "--card-w": "46px", "--card-h": "48px" } as React.CSSProperties}>
+                      <div key={card.instanceId} style={{ position: "relative", "--card-w": "52px", "--card-h": "56px" } as React.CSSProperties}>
                         <CardView card={card} onClick={() => handleCardClick(card)} />
                         {hasSelfScrap && !hasPendingForMe && !isBotTurn && (
                           <div onClick={(e) => { e.stopPropagation(); dispatch(activateSelfScrap(state, viewerId, card.instanceId)); }}
@@ -247,7 +246,7 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
                     const def = getCardDef(base.definitionId);
                     const hasSelfScrap = def.scrapEffects.some(e => e.type === "self_scrap");
                     return (
-                      <div key={base.instanceId} style={{ position: "relative", "--card-w": "46px", "--card-h": "48px" } as React.CSSProperties}>
+                      <div key={base.instanceId} style={{ position: "relative", "--card-w": "52px", "--card-h": "56px" } as React.CSSProperties}>
                         <CardView card={base} onClick={() => handleCardClick(base)} />
                         {hasSelfScrap && !hasPendingForMe && !isBotTurn && (
                           <div onClick={(e) => { e.stopPropagation(); dispatch(activateSelfScrap(state, viewerId, base.instanceId)); }}
@@ -275,9 +274,17 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
               <span style={{ color: "var(--authority)", fontWeight: "bold", fontSize: "11px" }}>♥ {player.authority}</span>
               <span style={{ color: "var(--trade)", fontWeight: "bold", fontSize: "11px" }}>{fr.resources.trade}: {player.currentTrade}</span>
               <span style={{ color: "var(--combat)", fontWeight: "bold", fontSize: "11px" }}>⚔ {player.currentCombat}</span>
-              <span style={{ color: "var(--text-muted)", fontSize: "9px" }}>{fr.ui.deck} {player.deck.length} · {fr.ui.discard} {player.discard.length}</span>
+
             </div>
             <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", alignItems: "center" }}>
+              <button className="primary" disabled={hasPendingForMe || isBotTurn}
+                onClick={() => dispatch(endTurn(state, viewerId))}
+                style={{ minHeight: "36px", padding: "2px 10px", fontSize: "11px", fontWeight: "bold" }}>
+                {fr.actions.endTurn}
+              </button>
+              <button onClick={() => setShowLog(!showLog)} style={{ minHeight: "36px", padding: "2px 8px", fontSize: "10px" }}>
+                {fr.actions.log}
+              </button>
               {canAttackDirect && player.currentCombat > 0 && !hasPendingForMe && !isBotTurn && (
                 <button className="danger"
                   onClick={() => dispatch(attackOpponent(state, viewerId, player.currentCombat))}
@@ -290,14 +297,6 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
                   🛡 Avant-poste
                 </span>
               )}
-              <button onClick={() => setShowLog(!showLog)} style={{ minHeight: "36px", padding: "2px 8px", fontSize: "10px" }}>
-                {fr.actions.log}
-              </button>
-              <button className="primary" disabled={hasPendingForMe || isBotTurn}
-                onClick={() => dispatch(endTurn(state, viewerId))}
-                style={{ minHeight: "36px", padding: "2px 8px", fontSize: "11px" }}>
-                {fr.actions.endTurn}
-              </button>
               <button
                 onClick={() => { if (confirm(fr.actions.concede + " ?")) dispatch(concedeGame(state, viewerId)); }}
                 style={{ fontSize: "9px", color: "var(--text-muted)", padding: "1px 5px", minHeight: "18px", background: "transparent", border: "1px solid rgba(255,85,85,0.25)", opacity: 0.8 }}>
@@ -324,6 +323,9 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
                 · {player.hand.length} carte{player.hand.length > 1 ? "s" : ""}
               </span>
             )}
+            <span style={{ marginLeft: "6px", opacity: 0.5, fontSize: "9px" }}>
+              {fr.ui.deck} {player.deck.length} · {fr.ui.discard} {player.discard.length}
+            </span>
           </div>
           <div style={{ position: "relative", flex: 1, minHeight: 0 }}>
             <div style={{ overflowX: "auto", height: "100%", ...(isBotTurn ? { filter: "grayscale(40%)", opacity: 0.7 } : {}) }}>

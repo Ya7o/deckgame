@@ -2345,3 +2345,86 @@ describe("PATCH 0048 — B. Touch targets landscape ≥ 36px", () => {
     expect(closeBtn).not.toBeNull();
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PATCH 0052 — Layout paysage optimisé
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("PATCH 0052 — A. Layout paysage optimisé", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.stubGlobal("matchMedia", (query: string) => ({
+      matches: query.includes("landscape"),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+  });
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+
+  it("Landscape : section EN JEU présente", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    expect(container.querySelector("[data-layout='landscape']")).not.toBeNull();
+    // EN JEU label present
+    expect(container.textContent).toContain("EN JEU");
+  });
+
+  it("Landscape : bouton Fin du tour présent", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const endBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.trim() === "Fin du tour");
+    expect(endBtn).toBeDefined();
+  });
+
+  it("Landscape : bouton Journal présent", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const journalBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.trim() === "Journal");
+    expect(journalBtn).toBeDefined();
+  });
+
+  it("Landscape : section MAIN (hand) présente avec label", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    expect(container.textContent).toContain("MAIN");
+  });
+});
+
+describe("PATCH 0052 — B. Portrait non régressé", () => {
+  beforeEach(() => { vi.useFakeTimers(); vi.unstubAllGlobals(); });
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+
+  it("Portrait : data-layout=portrait rendu", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    expect(container.querySelector("[data-layout='portrait']")).not.toBeNull();
+  });
+
+  it("Portrait : Fin du tour présent et ≥ 44px", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const endBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.trim() === "Fin du tour") as HTMLElement | undefined;
+    expect(endBtn).toBeDefined();
+    expect(parseInt(endBtn!.style.minHeight)).toBeGreaterThanOrEqual(44);
+  });
+});
