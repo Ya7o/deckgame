@@ -88,12 +88,12 @@ export function CardDetailModal({ card, state, onClose, onPlay, onBuy, onActivat
           </Section>
         )}
         {def.allyEffects.map((ally, ai) => (
-          <Section key={ai} title={`${fr.ui.ally} — ${fr.factions[ally.faction] ?? ally.faction}${ally.optional ? " (optionnel)" : ""}`}>
+          <Section key={ai} title={`${fr.ui.ally} — ${fr.factions[ally.faction] ?? ally.faction}${ally.optional ? " (optionnel)" : ""} · ${fr.ui.allyHint}`}>
             {ally.effects.map((e, i) => <div key={i} style={{ fontSize: "13px" }}>{renderEffectFr(e)}</div>)}
           </Section>
         ))}
         {def.scrapEffects.length > 0 && (
-          <Section title={fr.ui.scrap}>
+          <Section title={`${fr.ui.scrap} — ${fr.ui.scrapHint}`}>
             {def.scrapEffects.map((e, i) => <div key={i} style={{ fontSize: "13px" }}>{renderEffectFr(e)}</div>)}
           </Section>
         )}

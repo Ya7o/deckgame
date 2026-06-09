@@ -73,6 +73,10 @@ export const fr = {
     scrap: "Écart",
     zone: "Zone",
     exhausted: "épuisée",
+    allyHint: "même faction jouée ce tour",
+    scrapHint: "retire définitivement de la partie",
+    glossaryTitle: "Glossaire",
+    glossaryBtn: "?",
     used: "UTILISÉ",
     buyBadge: "ACHAT",
     playBadge: "JOUER",
@@ -170,6 +174,20 @@ export const fr = {
     trade_escort: "Escorte Commerciale",
     trading_post: "Comptoir Commercial",
   } as Record<string, string>,
+
+  glossary: [
+    { term: "Main", definition: "Cartes que vous pouvez jouer ce tour." },
+    { term: "Pioche", definition: "Votre deck — mélangé à nouveau quand il est vide." },
+    { term: "Défausse", definition: "Cartes jouées/achetées ce tour, remélangées en fin de tour suivant." },
+    { term: "Écarter", definition: "Retirer définitivement une carte de la partie (hors défausse et deck)." },
+    { term: "Défausser", definition: "Mettre une carte dans la défausse." },
+    { term: "Effet allié", definition: "Bonus actif si au moins une carte de la même faction a été jouée ce tour." },
+    { term: "Base", definition: "Reste en jeu entre les tours — donne des effets récurrents." },
+    { term: "Avant-poste", definition: "Base avec des points de défense — doit être détruite avant d'attaquer l'adversaire directement." },
+    { term: "Commerce", definition: "Permet d'acheter des cartes dans la rangée commerciale." },
+    { term: "Combat", definition: "Permet d'attaquer l'adversaire ou ses bases." },
+    { term: "Autorité", definition: "Vos points de vie — tomber à 0 = défaite." },
+  ] as { term: string; definition: string }[],
 
   startScreen: {
     title: "DECKGAME V0",

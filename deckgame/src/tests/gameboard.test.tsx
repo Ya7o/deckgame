@@ -2525,3 +2525,94 @@ describe("PATCH 0053 — B. Résumé actions bot (landscape)", () => {
     expect(journalBtn).toBeDefined();
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PATCH 0054 — Vocabulaire et microcopies
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("PATCH 0054 — A. Bouton glossaire portrait", () => {
+  beforeEach(() => { vi.useFakeTimers(); vi.unstubAllGlobals(); });
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+
+  it("Bouton '?' (glossaire) présent dans le layout portrait", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const glossBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.getAttribute("aria-label") === "Glossaire");
+    expect(glossBtn).toBeDefined();
+  });
+
+  it("Clic sur '?' ouvre le panneau glossaire avec le titre", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const glossBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.getAttribute("aria-label") === "Glossaire")!;
+    fireEvent.click(glossBtn);
+    expect(container.textContent).toContain("Glossaire");
+  });
+
+  it("Panneau glossaire contient le terme 'Main'", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const glossBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.getAttribute("aria-label") === "Glossaire")!;
+    fireEvent.click(glossBtn);
+    expect(container.textContent).toContain("Cartes que vous pouvez jouer ce tour");
+  });
+
+  it("Panneau glossaire contient le terme 'Écarter' avec définition", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const glossBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.getAttribute("aria-label") === "Glossaire")!;
+    fireEvent.click(glossBtn);
+    expect(container.textContent).toContain("Retirer définitivement");
+  });
+});
+
+describe("PATCH 0054 — B. Bouton glossaire landscape", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.stubGlobal("matchMedia", (query: string) => ({
+      matches: query.includes("landscape"),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+  });
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+
+  it("Landscape : bouton '?' présent", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const glossBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.getAttribute("aria-label") === "Glossaire");
+    expect(glossBtn).toBeDefined();
+  });
+
+  it("Landscape : clic glossaire affiche 'Effet allié' avec définition", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const glossBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.getAttribute("aria-label") === "Glossaire")!;
+    fireEvent.click(glossBtn);
+    expect(container.textContent).toContain("Effet allié");
+    expect(container.textContent).toContain("même faction a été jouée ce tour");
+  });
+});

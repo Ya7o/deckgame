@@ -107,3 +107,23 @@ Le bot utilise une stratégie **balanced** (commerce et combat équilibrés).
 |---|---|
 | **Contre le Bot** | Vous (Joueur 1) vs bot (Joueur 2) |
 | **2 Joueurs** | Deux joueurs sur le même écran (même appareil) |
+
+---
+
+## Glossaire
+
+Bouton **?** dans la barre d'actions pour afficher ce glossaire en jeu.
+
+| Terme | Définition |
+|---|---|
+| **Main** | Cartes que vous pouvez jouer ce tour. |
+| **Pioche** | Votre deck — mélangé à nouveau quand il est vide. |
+| **Défausse** | Cartes jouées/achetées ce tour, remélangées en fin de tour suivant. |
+| **Écarter** | Retirer définitivement une carte de la partie (ni défausse ni deck). |
+| **Défausser** | Mettre une carte dans la défausse. |
+| **Effet allié** | Bonus actif si au moins une carte de la même faction a été jouée ce tour. |
+| **Base** | Carte permanente — reste en jeu entre les tours. |
+| **Avant-poste** | Base avec des points de défense — doit être détruite avant une attaque directe. |
+| **Commerce** | Permet d'acheter des cartes dans la rangée commerciale. |
+| **Combat** | Permet d'attaquer l'adversaire ou ses bases. |
+| **Autorité** | Vos points de vie — tomber à 0 = défaite. |

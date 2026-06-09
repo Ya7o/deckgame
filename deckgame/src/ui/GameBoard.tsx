@@ -34,6 +34,7 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
   const [state, setState] = useState<GameState>(initialState);
   const [selected, setSelected] = useState<CardInstance | null>(null);
   const [showLog, setShowLog] = useState(false);
+  const [showGlossary, setShowGlossary] = useState(false);
 
   // Auto-trigger bot turn in solo mode
   useEffect(() => {
@@ -350,6 +351,12 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
                   {isFullscreen ? fr.actions.exitFullscreen : fr.actions.enterFullscreen}
                 </button>
               )}
+              <button
+                aria-label={fr.ui.glossaryTitle}
+                onClick={() => setShowGlossary(true)}
+                style={{ fontSize: "9px", color: "var(--text-muted)", padding: "1px 5px", minHeight: "18px", background: "transparent", border: "1px solid var(--border)", opacity: 0.7 }}>
+                {fr.ui.glossaryBtn}
+              </button>
             </div>
           </div>
         </div>
@@ -429,6 +436,22 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
             onSelfScrap={(player.inPlay.includes(selected) || player.bases.includes(selected)) && !hasPendingForMe && !isBotTurn ? () => { dispatch(activateSelfScrap(state, viewerId, selected.instanceId)); } : undefined}
             onAttackBase={opponent.bases.includes(selected) && player.currentCombat >= (getCardDef(selected.definitionId).defense ?? 999) && !hasPendingForMe && !isBotTurn ? () => { dispatch(attackBase(state, viewerId, selected.instanceId)); } : undefined}
           />
+        )}
+        {showGlossary && (
+          <div onClick={() => setShowGlossary(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 200 }}>
+            <div onClick={e => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "12px 12px 0 0", padding: "16px", paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px))", width: "100%", maxWidth: "500px", maxHeight: "70vh", overflowY: "auto" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                <span style={{ fontWeight: "bold", fontSize: "15px" }}>{fr.ui.glossaryTitle}</span>
+                <button onClick={() => setShowGlossary(false)} style={{ minWidth: "44px", minHeight: "44px", padding: "0", fontSize: "18px", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+              </div>
+              {fr.glossary.map(({ term, definition }) => (
+                <div key={term} style={{ marginBottom: "10px" }}>
+                  <span style={{ fontWeight: "bold", color: "var(--accent)" }}>{term}</span>
+                  <span style={{ color: "var(--text-muted)", marginLeft: "8px", fontSize: "13px" }}>{definition}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
       </div>
     );
@@ -740,6 +763,13 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
             </button>
           ) : <span />}
           <button
+            aria-label={fr.ui.glossaryTitle}
+            onClick={() => setShowGlossary(true)}
+            style={{ fontSize: "10px", color: "var(--text-muted)", padding: "2px 6px", minHeight: "22px", background: "transparent", border: "1px solid var(--border)", opacity: 0.7 }}
+          >
+            {fr.ui.glossaryBtn}
+          </button>
+          <button
             onClick={() => { if (confirm(`${fr.actions.concede} ?`)) dispatch(concedeGame(state, viewerId)); }}
             style={{
               fontSize: "10px", color: "var(--text-muted)", padding: "2px 8px",
@@ -860,6 +890,23 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
             >×</button>
           </div>
           <GameLog entries={state.log} maxHeight={150} />
+        </div>
+      )}
+
+      {showGlossary && (
+        <div onClick={() => setShowGlossary(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 200 }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "12px 12px 0 0", padding: "16px", paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px))", width: "100%", maxWidth: "500px", maxHeight: "70vh", overflowY: "auto" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+              <span style={{ fontWeight: "bold", fontSize: "15px" }}>{fr.ui.glossaryTitle}</span>
+              <button onClick={() => setShowGlossary(false)} style={{ minWidth: "44px", minHeight: "44px", padding: "0", fontSize: "18px", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+            </div>
+            {fr.glossary.map(({ term, definition }) => (
+              <div key={term} style={{ marginBottom: "10px" }}>
+                <span style={{ fontWeight: "bold", color: "var(--accent)" }}>{term}</span>
+                <span style={{ color: "var(--text-muted)", marginLeft: "8px", fontSize: "13px" }}>{definition}</span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
