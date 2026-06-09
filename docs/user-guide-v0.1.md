@@ -37,6 +37,15 @@ Chaque joueur commence avec **50 PA**.
 | Vaisseau | — | Joué depuis la main, défaussé en fin de tour |
 | Base | Bordure colorée | Reste en jeu, donne des effets récurrents |
 
+### Bases et avant-postes
+
+| Situation | Ce qui se passe |
+|---|---|
+| Base en jeu, non activée | Badge **ACTIV.** visible — cliquez pour déclencher l'effet |
+| Base en jeu, déjà activée | Badge **UTILISÉ** — disponible au prochain tour |
+| Avant-poste adverse | Protège l'adversaire — doit être détruit avant toute attaque directe |
+| Avant-poste attaquable | La **Défense** s'affiche — vous devez avoir autant de Combat pour le cibler |
+
 ### Factions (effets alliés si 2+ cartes même faction jouées)
 
 | Faction | Couleur | Spécialité |

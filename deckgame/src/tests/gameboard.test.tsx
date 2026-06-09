@@ -2616,3 +2616,192 @@ describe("PATCH 0054 — B. Bouton glossaire landscape", () => {
     expect(container.textContent).toContain("même faction a été jouée ce tour");
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PATCH 0055 — Clarifier bases, avant-postes et activation
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("PATCH 0055 — A. Bases et avant-postes (portrait)", () => {
+  beforeEach(() => { vi.useFakeTimers(); vi.unstubAllGlobals(); });
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+
+  it("Avant-poste adverse : badge '🛡' et mot 'avant-poste' affichés", () => {
+    const base = makeHumanTurnState();
+    // Inject outpost (space_station, is_outpost=true) into opponent's bases
+    const state = {
+      ...base,
+      players: {
+        ...base.players,
+        player_2: {
+          ...base.players.player_2,
+          bases: [{
+            instanceId: "test-op-out",
+            definitionId: "space_station",
+            exhausted: false,
+            currentZone: "bases" as const,
+            ownerId: "player_2" as const,
+          }],
+        },
+      },
+    };
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    expect(container.textContent).toContain("avant-poste");
+  });
+
+  it("Attaque bloquée : message pédagogique et pas de bouton Attaquer", () => {
+    const base = makeHumanTurnState();
+    // Give player combat and opponent an outpost
+    const state = {
+      ...base,
+      players: {
+        ...base.players,
+        player_1: { ...base.players.player_1, currentCombat: 5 },
+        player_2: {
+          ...base.players.player_2,
+          bases: [{
+            instanceId: "test-op-out2",
+            definitionId: "space_station",
+            exhausted: false,
+            currentZone: "bases" as const,
+            ownerId: "player_2" as const,
+          }],
+        },
+      },
+    };
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    // Outpost blocking message should be visible
+    expect(container.textContent).toContain("Avant-poste");
+    // No direct attack button (blocked)
+    const attackBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => /^⚔ Attaquer/.test(b.textContent?.trim() ?? ""));
+    expect(attackBtn).toBeUndefined();
+  });
+
+  it("Base joueur non-épuisée (blob_wheel) : bouton Activer visible", () => {
+    const base = makeHumanTurnState();
+    const state = {
+      ...base,
+      players: {
+        ...base.players,
+        player_1: {
+          ...base.players.player_1,
+          bases: [{
+            instanceId: "test-base-1",
+            definitionId: "blob_wheel",
+            exhausted: false,
+            currentZone: "bases" as const,
+            ownerId: "player_1" as const,
+          }],
+        },
+      },
+    };
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const activateBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.trim() === "Activer");
+    expect(activateBtn).toBeDefined();
+  });
+
+  it("Base joueur épuisée : pas de bouton Activer, overlay UTILISÉ via CardView", () => {
+    const base = makeHumanTurnState();
+    const state = {
+      ...base,
+      players: {
+        ...base.players,
+        player_1: {
+          ...base.players.player_1,
+          bases: [{
+            instanceId: "test-base-2",
+            definitionId: "blob_wheel",
+            exhausted: true,
+            currentZone: "bases" as const,
+            ownerId: "player_1" as const,
+          }],
+        },
+      },
+    };
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    // No Activer button
+    const activateBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.trim() === "Activer");
+    expect(activateBtn).toBeUndefined();
+    // UTILISÉ overlay is shown in CardView
+    expect(container.textContent).toContain("UTILISÉ");
+  });
+});
+
+describe("PATCH 0055 — B. Bases (landscape)", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.stubGlobal("matchMedia", (query: string) => ({
+      matches: query.includes("landscape"),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+  });
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+
+  it("Landscape : base non-épuisée visible dans EN JEU (Activer via modale)", () => {
+    // In landscape layout, Activer is not a direct button on the card — user clicks
+    // the base to open CardDetailModal where the Activer button appears.
+    const base = makeHumanTurnState();
+    const state = {
+      ...base,
+      players: {
+        ...base.players,
+        player_1: {
+          ...base.players.player_1,
+          bases: [{
+            instanceId: "test-base-ls",
+            definitionId: "blob_wheel",
+            exhausted: false,
+            currentZone: "bases" as const,
+            ownerId: "player_1" as const,
+          }],
+        },
+      },
+    };
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    // Base is rendered in EN JEU, not exhausted — no UTILISÉ overlay
+    expect(container.textContent).toContain("EN JEU");
+    expect(container.textContent).not.toContain("UTILISÉ");
+  });
+
+  it("Landscape : avant-poste adverse badge présent", () => {
+    const base = makeHumanTurnState();
+    const state = {
+      ...base,
+      players: {
+        ...base.players,
+        player_2: {
+          ...base.players.player_2,
+          bases: [{
+            instanceId: "test-op-ls",
+            definitionId: "space_station",
+            exhausted: false,
+            currentZone: "bases" as const,
+            ownerId: "player_2" as const,
+          }],
+        },
+      },
+    };
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    expect(container.textContent).toContain("avant-poste");
+  });
+});

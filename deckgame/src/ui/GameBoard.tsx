@@ -335,7 +335,7 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
               )}
               {!canAttackDirect && player.currentCombat > 0 && !isBotTurn && (
                 <span style={{ fontSize: "9px", color: "var(--danger)", background: "rgba(255,85,85,0.1)", padding: "2px 5px", borderRadius: "4px", border: "1px solid rgba(255,85,85,0.25)" }}>
-                  🛡 Avant-poste
+                  {fr.ui.outpostBlockLandscape}
                 </span>
               )}
               <button
@@ -734,7 +734,7 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
               fontSize: "11px", color: "var(--danger)", background: "rgba(255,85,85,0.1)",
               padding: "3px 8px", borderRadius: "4px", border: "1px solid rgba(255,85,85,0.25)",
             }}>
-              Avant-poste bloque l&apos;attaque directe
+              {fr.ui.outpostBlockPortrait}
             </span>
           )}
           <button

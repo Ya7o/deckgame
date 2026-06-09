@@ -104,6 +104,22 @@ export function CardDetailModal({ card, state, onClose, onPlay, onBuy, onActivat
           {card.exhausted ? ` · ${fr.ui.exhausted}` : ""}
         </div>
 
+        {/* Base / outpost context hint */}
+        {def.type === "base" && (
+          <div style={{ fontSize: "11px", marginTop: "6px", borderTop: "1px solid var(--border)", paddingTop: "6px" }}>
+            {def.isOutpost ? (
+              <span style={{ color: "var(--danger)" }}>{fr.ui.outpostHint}</span>
+            ) : (
+              <span style={{ color: "var(--text-muted)" }}>
+                {fr.ui.baseHint}{" "}
+                <span style={{ color: card.exhausted ? "var(--accent)" : "var(--text-muted)", fontStyle: card.exhausted ? "italic" : "normal" }}>
+                  {card.exhausted ? fr.ui.baseUsedHint : fr.ui.baseActivateHint}
+                </span>
+              </span>
+            )}
+          </div>
+        )}
+
         {/* Actions */}
         <div style={{ display: "flex", gap: "8px", marginTop: "16px", flexWrap: "wrap" }}>
           {onPlay && <button className="primary" onClick={onPlay}>{fr.actions.play}</button>}
