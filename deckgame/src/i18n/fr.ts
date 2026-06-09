@@ -82,6 +82,7 @@ export const fr = {
     outpostBlockPortrait: "🛡 Avant-poste adverse — détruisez-le pour attaquer directement",
     endTurnTitlePending: "Résolvez d'abord le choix en attente",
     endTurnTitleBot: "Tour du bot en cours…",
+    botSummaryLink: "Voir journal",
     scrapHint: "retire définitivement de la partie",
     glossaryTitle: "Glossaire",
     glossaryBtn: "?",

@@ -3072,3 +3072,165 @@ describe("PATCH 0058 — B. Portrait non régressé", () => {
     expect(activateBtn).toBeDefined();
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PATCH 0059 — Résumé bot détaillable, non tronqué silencieusement
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("PATCH 0059 — A. Résumé bot détaillable (landscape)", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.stubGlobal("matchMedia", (query: string) => ({
+      matches: query.includes("landscape"),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+  });
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+
+  it("Landscape : résumé bot absent quand lastBotActions vide", () => {
+    // At turn 1 there are no bot actions yet
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    // The ✦ icon should NOT be present when no bot actions
+    // Only check absence at turn 1 (no bot turn yet)
+    expect(state.turnNumber).toBe(1);
+    // No "Voir journal" link expected at turn 1
+    const journalBtns = Array.from(container.querySelectorAll("button"))
+      .filter(b => b.textContent?.trim() === "Voir journal");
+    expect(journalBtns.length).toBe(0);
+  });
+
+  it("Landscape : résumé bot ≤3 actions, pas de bouton Voir journal", () => {
+    // Construct a state where it's human turn 2 and bot logged 2 actions on turn 1
+    const base = makeHumanTurnState();
+    const stateT2: typeof base = {
+      ...base,
+      turnNumber: 2,
+      currentPlayerId: "player_1" as const,
+      log: [
+        { turn: 1, playerId: "player_2", message: "Joue Scout." , timestamp: 0 },
+        { turn: 1, playerId: "player_2", message: "Achète Viper." , timestamp: 0 },
+        { turn: 1, playerId: "player_2", message: "Fin du tour." , timestamp: 0 },
+      ],
+    };
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: stateT2, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    // 2 bot actions ≤ 3 → no "Voir journal" button in summary
+    const journalBtns = Array.from(container.querySelectorAll("button"))
+      .filter(b => b.textContent?.trim() === "Voir journal");
+    expect(journalBtns.length).toBe(0);
+    // Actions are visible in summary
+    expect(container.textContent).toContain("Bot joue Scout");
+    expect(container.textContent).toContain("Bot achète Viper");
+  });
+
+  it("Landscape : résumé bot >3 actions affiche +N et bouton Voir journal", () => {
+    const base = makeHumanTurnState();
+    const stateT2: typeof base = {
+      ...base,
+      turnNumber: 2,
+      currentPlayerId: "player_1" as const,
+      log: [
+        { turn: 1, playerId: "player_2", message: "Joue Scout." , timestamp: 0 },
+        { turn: 1, playerId: "player_2", message: "Joue Viper." , timestamp: 0 },
+        { turn: 1, playerId: "player_2", message: "Joue Scout." , timestamp: 0 },
+        { turn: 1, playerId: "player_2", message: "Achète Corvette." , timestamp: 0 },
+        { turn: 1, playerId: "player_2", message: "Attaque player_1." , timestamp: 0 },
+      ],
+    };
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: stateT2, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    // 5 actions > 3 → "+2 actions" and "Voir journal" button appear
+    const voirBtns = Array.from(container.querySelectorAll("button"))
+      .filter(b => b.textContent?.trim() === "Voir journal");
+    expect(voirBtns.length).toBeGreaterThanOrEqual(1);
+    expect(container.textContent).toContain("+2");
+  });
+
+  it("Landscape : clic Voir journal ouvre le journal", () => {
+    const base = makeHumanTurnState();
+    const stateT2: typeof base = {
+      ...base,
+      turnNumber: 2,
+      currentPlayerId: "player_1" as const,
+      log: [
+        { turn: 1, playerId: "player_2", message: "Joue Scout." , timestamp: 0 },
+        { turn: 1, playerId: "player_2", message: "Joue Viper." , timestamp: 0 },
+        { turn: 1, playerId: "player_2", message: "Joue Scout." , timestamp: 0 },
+        { turn: 1, playerId: "player_2", message: "Achète Corvette." , timestamp: 0 },
+      ],
+    };
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: stateT2, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const voirBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.trim() === "Voir journal");
+    expect(voirBtn).toBeDefined();
+    fireEvent.click(voirBtn!);
+    // Journal panel should now be visible (contains "Journal" heading or close button)
+    const closeBtn = container.querySelector("button[aria-label='Fermer le journal']");
+    expect(closeBtn).not.toBeNull();
+  });
+});
+
+describe("PATCH 0059 — B. Résumé bot portrait non régressé", () => {
+  beforeEach(() => { vi.useFakeTimers(); vi.unstubAllGlobals(); });
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+
+  it("Portrait : résumé bot ≤4 actions, pas de Voir journal", () => {
+    const base = makeHumanTurnState();
+    const stateT2: typeof base = {
+      ...base,
+      turnNumber: 2,
+      currentPlayerId: "player_1" as const,
+      log: [
+        { turn: 1, playerId: "player_2", message: "Joue Scout." , timestamp: 0 },
+        { turn: 1, playerId: "player_2", message: "Joue Viper." , timestamp: 0 },
+        { turn: 1, playerId: "player_2", message: "Achète Corvette." , timestamp: 0 },
+        { turn: 1, playerId: "player_2", message: "Fin du tour." , timestamp: 0 },
+      ],
+    };
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: stateT2, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    // "Fin du tour." is filtered out → 3 effective actions ≤ 4 → no Voir journal
+    const voirBtns = Array.from(container.querySelectorAll("button"))
+      .filter(b => b.textContent?.trim() === "Voir journal");
+    expect(voirBtns.length).toBe(0);
+  });
+
+  it("Portrait : résumé bot >4 actions affiche Voir journal", () => {
+    const base = makeHumanTurnState();
+    const stateT2: typeof base = {
+      ...base,
+      turnNumber: 2,
+      currentPlayerId: "player_1" as const,
+      log: [
+        { turn: 1, playerId: "player_2", message: "Joue Scout." , timestamp: 0 },
+        { turn: 1, playerId: "player_2", message: "Joue Viper." , timestamp: 0 },
+        { turn: 1, playerId: "player_2", message: "Joue Scout." , timestamp: 0 },
+        { turn: 1, playerId: "player_2", message: "Joue Viper." , timestamp: 0 },
+        { turn: 1, playerId: "player_2", message: "Achète Corvette." , timestamp: 0 },
+        { turn: 1, playerId: "player_2", message: "Attaque player_1." , timestamp: 0 },
+      ],
+    };
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: stateT2, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    // 6 actions > 4 → Voir journal visible
+    const voirBtns = Array.from(container.querySelectorAll("button"))
+      .filter(b => b.textContent?.trim() === "Voir journal");
+    expect(voirBtns.length).toBeGreaterThanOrEqual(1);
+    expect(container.textContent).toContain("+2");
+  });
+});

@@ -180,12 +180,26 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
             fontSize: "10px",
             color: "var(--text-muted)",
             flexShrink: 0,
-            overflow: "hidden",
-            whiteSpace: "nowrap",
-            textOverflow: "ellipsis",
+            display: "flex",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "2px",
           }}>
-            <span style={{ color: "var(--accent)", fontWeight: "bold", marginRight: "6px" }}>✦</span>
-            {lastBotActions.map(formatBotAction).join(" · ")}
+            <span style={{ color: "var(--accent)", fontWeight: "bold", marginRight: "4px" }}>✦</span>
+            <span>{lastBotActions.slice(0, 3).map(formatBotAction).join(" · ")}</span>
+            {lastBotActions.length > 3 && (
+              <>
+                <span style={{ color: "var(--text-muted)", opacity: 0.7, marginLeft: "2px" }}>
+                  +{lastBotActions.length - 3} action{lastBotActions.length - 3 > 1 ? "s" : ""}
+                </span>
+                <button
+                  onClick={() => setShowLog(true)}
+                  style={{ marginLeft: "4px", fontSize: "8px", background: "transparent", border: "1px solid var(--accent)", color: "var(--accent)", padding: "0 4px", borderRadius: "3px", cursor: "pointer", fontWeight: "bold", minHeight: "auto", lineHeight: "1.4" }}
+                >
+                  {fr.ui.botSummaryLink}
+                </button>
+              </>
+            )}
           </div>
         )}
 
@@ -882,12 +896,26 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
           fontSize: "10px",
           color: "var(--text-muted)",
           flexShrink: 0,
-          overflow: "hidden",
-          whiteSpace: "nowrap",
-          textOverflow: "ellipsis",
+          display: "flex",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "2px",
         }}>
-          <span style={{ color: "var(--accent)", fontWeight: "bold", marginRight: "6px" }}>✦</span>
-          {lastBotActions.map(formatBotAction).join(" · ")}
+          <span style={{ color: "var(--accent)", fontWeight: "bold", marginRight: "4px" }}>✦</span>
+          <span>{lastBotActions.slice(0, 4).map(formatBotAction).join(" · ")}</span>
+          {lastBotActions.length > 4 && (
+            <>
+              <span style={{ color: "var(--text-muted)", opacity: 0.7, marginLeft: "2px" }}>
+                +{lastBotActions.length - 4} action{lastBotActions.length - 4 > 1 ? "s" : ""}
+              </span>
+              <button
+                onClick={() => setShowLog(true)}
+                style={{ marginLeft: "4px", fontSize: "9px", background: "transparent", border: "1px solid var(--accent)", color: "var(--accent)", padding: "0 4px", borderRadius: "3px", cursor: "pointer", fontWeight: "bold", minHeight: "auto", lineHeight: "1.4" }}
+              >
+                {fr.ui.botSummaryLink}
+              </button>
+            </>
+          )}
         </div>
       )}
 
