@@ -1,7 +1,7 @@
 # PATCH 0061 — Nettoyage traçabilité post-tag V0.2
 
 **Date :** 2026-06-09
-**Commit :** à renseigner après push
+**Commit :** 2dab944
 **Branche :** master
 **Tests unitaires :** 316 / 316 GREEN
 **Playwright :** aucun nouveau test (patch doc uniquement)
