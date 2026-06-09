@@ -1,7 +1,7 @@
 # PATCH 0053 — Rendre les actions du bot visibles hors journal
 
 **Date :** 2026-06-08
-**Commit :** à renseigner après push
+**Commit :** 2806560
 **Branche :** master
 **Tests unitaires :** 286 / 286 GREEN
 **Playwright :** 5 / 5 GREEN
