@@ -1,7 +1,7 @@
 # PATCH 0059 — Résumé bot détaillable, non tronqué silencieusement
 
 **Date :** 2026-06-09
-**Commit :** à renseigner après push
+**Commit :** 5d605c7
 **Branche :** master
 **Tests unitaires :** 316 / 316 GREEN
 **Playwright :** 5 / 5 GREEN

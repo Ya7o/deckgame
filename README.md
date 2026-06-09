@@ -1,4 +1,4 @@
-# Deckgame — Star Realms V0.2 (en cours)
+# Deckgame — Star Realms V0.2 (tag v0.2.0)
 
 Prototype jouable de Star Realms (set de base) en React + TypeScript.
 Support mobile/PWA, layout portrait et paysage, mode solo contre bot.
@@ -24,7 +24,7 @@ Le portrait est également supporté et fonctionnel.
 ## Stack technique
 
 - **Frontend** : React 19 + TypeScript + Vite
-- **Tests** : Vitest + Testing Library (274 tests)
+- **Tests** : Vitest + Testing Library (316 tests)
 - **E2E** : Playwright (multi-viewport, mobile/PWA)
 - **Moteur de jeu** : pur TypeScript, immuable (pas de mutation d'état)
 
@@ -63,7 +63,7 @@ src/
     CardDetailModal.tsx  — modal détail / action
     GameLog.tsx          — journal de partie
   i18n/fr.ts             — traductions françaises
-  tests/                 — suite de tests (274 tests)
+  tests/                 — suite de tests (316 tests)
 public/
   manifest.webmanifest   — manifest PWA (standalone, orientation: any)
   favicon.svg            — icône SVG
@@ -89,16 +89,17 @@ public/
 - [Guide mobile & PWA](docs/mobile-pwa-guide.md)
 - [Direction produit V0.2](docs/product-direction-v0.2.md)
 - [Notes de version V0.1](docs/v0.1-release-notes.md)
+- [Notes de version V0.2](docs/v0.2-release-notes.md)
 
-## Limitations connues V0.1 (en cours de correction pour V0.2)
+## Limitations V0.1 — corrigées en V0.2
 
-| Limitation | Priorité | Statut |
+| Limitation | Priorité | Statut V0.2 |
 |---|---|---|
-| Actions bot peu lisibles hors journal | P1 | PATCH 0053 |
-| Vocabulaire flou (Main, Pioche, Effet allié…) | P2 | PATCH 0054 |
-| Bases/avant-postes — activation peu claire | P2 | PATCH 0055 |
-| Icônes PWA PNG absentes | P3 | à planifier |
-| Accès modal carte non évident | P2 | à planifier |
+| Actions bot peu lisibles hors journal | P1 | ✅ PATCH 0053 + 0059 |
+| Vocabulaire flou (Main, Pioche, Effet allié…) | P2 | ✅ PATCH 0054 |
+| Bases/avant-postes — activation peu claire | P2 | ✅ PATCH 0055 + 0058 |
+| Icônes PWA PNG absentes | P3 | à planifier (V0.3) |
+| Accès modal carte non évident | P2 | ✅ PATCH 0058 (bouton direct) |
 
 ## Historique des patchs
 
@@ -112,4 +113,6 @@ public/
 - PATCH 0049 : documentation V0.1
 - PATCH 0050 : tag v0.1.0
 - PATCH 0051 : direction produit V0.2 (paysage plein écran = cible)
-- PATCH 0052–0057 : optimisations V0.2 (en cours)
+- PATCH 0052–0057 : optimisations V0.2 (glossaire, pédagogie, hiérarchie boutons, QA)
+- PATCH 0058–0060 : correctifs P1 post-audit (activer direct paysage, résumé bot)
+- PATCH 0061 : nettoyage traçabilité post-tag v0.2.0

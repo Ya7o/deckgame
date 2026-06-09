@@ -1,7 +1,7 @@
 # PATCH 0060 — Audit final V0.2 et tag v0.2.0
 
 **Date :** 2026-06-09
-**Commit :** à renseigner après push
+**Commit :** 510e63d
 **Branche :** master
 **Tests unitaires :** 316 / 316 GREEN
 **Playwright QA :** 12 / 12 GREEN
