@@ -1,7 +1,7 @@
 # PATCH 0051 — Acter le paysage plein écran comme expérience cible
 
 **Date :** 2026-06-08
-**Commit :** à renseigner après push
+**Commit :** 9ca8d5b
 **Branche :** master
 **Tests :** 274 / 274 GREEN (inchangé — aucune modification source)
 
