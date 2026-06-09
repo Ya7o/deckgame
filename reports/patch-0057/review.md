@@ -1,7 +1,7 @@
 # PATCH 0057 — QA partie complète paysage plein écran
 
 **Date :** 2026-06-09
-**Commit :** à renseigner après push
+**Commit :** 2c187b2
 **Branche :** master
 **Tests unitaires :** 305 / 305 GREEN
 **Playwright QA :** 12 / 12 GREEN
