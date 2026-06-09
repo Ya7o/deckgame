@@ -1,7 +1,7 @@
 # PATCH 0052 — Optimiser le layout paysage plein écran
 
 **Date :** 2026-06-08
-**Commit :** à renseigner après push
+**Commit :** 8672567
 **Branche :** master
 **Tests unitaires :** 280 / 280 GREEN
 **Playwright :** 5 / 5 GREEN
