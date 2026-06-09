@@ -286,14 +286,25 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
                   {player.bases.map((base) => {
                     const def = getCardDef(base.definitionId);
                     const hasSelfScrap = def.scrapEffects.some(e => e.type === "self_scrap");
+                    const canActivateLs = !base.exhausted && !hasPendingForMe && !isBotTurn;
                     return (
-                      <div key={base.instanceId} style={{ position: "relative", "--card-w": "52px", "--card-h": "56px" } as React.CSSProperties}>
-                        <CardView card={base} onClick={() => handleCardClick(base)} />
-                        {hasSelfScrap && !hasPendingForMe && !isBotTurn && (
-                          <div onClick={(e) => { e.stopPropagation(); dispatch(activateSelfScrap(state, viewerId, base.instanceId)); }}
-                            style={{ position: "absolute", top: "2px", right: "2px", fontSize: "7px", background: "var(--danger)", color: "#fff", padding: "0 2px", borderRadius: "2px", cursor: "pointer", fontWeight: "bold" }}>
-                            ⊗
-                          </div>
+                      <div key={base.instanceId} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1px" }}>
+                        <div style={{ position: "relative", "--card-w": "52px", "--card-h": "56px" } as React.CSSProperties}>
+                          <CardView card={base} onClick={() => handleCardClick(base)} />
+                          {hasSelfScrap && !hasPendingForMe && !isBotTurn && (
+                            <div onClick={(e) => { e.stopPropagation(); dispatch(activateSelfScrap(state, viewerId, base.instanceId)); }}
+                              style={{ position: "absolute", top: "2px", right: "2px", fontSize: "7px", background: "var(--danger)", color: "#fff", padding: "0 2px", borderRadius: "2px", cursor: "pointer", fontWeight: "bold" }}>
+                              ⊗
+                            </div>
+                          )}
+                        </div>
+                        {canActivateLs && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); dispatch(activateBase(state, viewerId, base.instanceId)); }}
+                            style={{ width: "52px", fontSize: "7px", background: "var(--empire)", color: "#fff", padding: "2px 0", borderRadius: "3px", fontWeight: "bold", border: "none", cursor: "pointer", minHeight: "auto" }}
+                          >
+                            {fr.actions.activateBase}
+                          </button>
                         )}
                       </div>
                     );

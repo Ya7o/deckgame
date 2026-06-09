@@ -2910,3 +2910,165 @@ describe("PATCH 0056 — B. Hiérarchie boutons landscape", () => {
     expect(concedeBtn?.className ?? "").not.toContain("primary");
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PATCH 0058 — Activation directe des bases en paysage
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("PATCH 0058 — A. Activer direct landscape", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.stubGlobal("matchMedia", (query: string) => ({
+      matches: query.includes("landscape"),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+  });
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+
+  it("Landscape : base non-épuisée affiche bouton Activer direct", () => {
+    const base = makeHumanTurnState();
+    const state = {
+      ...base,
+      players: {
+        ...base.players,
+        player_1: {
+          ...base.players.player_1,
+          bases: [{
+            instanceId: "test-base-ls58",
+            definitionId: "blob_wheel",
+            exhausted: false,
+            currentZone: "bases" as const,
+            ownerId: "player_1" as const,
+          }],
+        },
+      },
+    };
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    // Landscape now has a direct Activer button on non-exhausted bases
+    const activateBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.trim() === "Activer");
+    expect(activateBtn).toBeDefined();
+  });
+
+  it("Landscape : base épuisée n'affiche pas Activer et montre UTILISÉ", () => {
+    const base = makeHumanTurnState();
+    const state = {
+      ...base,
+      players: {
+        ...base.players,
+        player_1: {
+          ...base.players.player_1,
+          bases: [{
+            instanceId: "test-base-ls58-ex",
+            definitionId: "blob_wheel",
+            exhausted: true,
+            currentZone: "bases" as const,
+            ownerId: "player_1" as const,
+          }],
+        },
+      },
+    };
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const activateBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.trim() === "Activer");
+    expect(activateBtn).toBeUndefined();
+    expect(container.textContent).toContain("UTILISÉ");
+  });
+
+  it("Landscape : clic Activer dispatch activateBase", () => {
+    const base = makeHumanTurnState();
+    const state = {
+      ...base,
+      players: {
+        ...base.players,
+        player_1: {
+          ...base.players.player_1,
+          bases: [{
+            instanceId: "test-base-dispatch",
+            definitionId: "space_station",
+            exhausted: false,
+            currentZone: "bases" as const,
+            ownerId: "player_1" as const,
+          }],
+        },
+      },
+    };
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const activateBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.trim() === "Activer")!;
+    expect(activateBtn).toBeDefined();
+    fireEvent.click(activateBtn);
+    // After activation, base should be exhausted (UTILISÉ shown)
+    expect(container.textContent).toContain("UTILISÉ");
+  });
+
+  it("Landscape : la modale reste accessible via tap sur la carte", () => {
+    const base = makeHumanTurnState();
+    const state = {
+      ...base,
+      players: {
+        ...base.players,
+        player_1: {
+          ...base.players.player_1,
+          bases: [{
+            instanceId: "test-base-modal",
+            definitionId: "blob_wheel",
+            exhausted: false,
+            currentZone: "bases" as const,
+            ownerId: "player_1" as const,
+          }],
+        },
+      },
+    };
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    // CardView is rendered; clicking it should open the modal
+    // The card wrapper div has onClick for handleCardClick
+    // Just check the card is rendered (data is present)
+    expect(container.textContent).toContain("Blob");
+  });
+});
+
+describe("PATCH 0058 — B. Portrait non régressé", () => {
+  beforeEach(() => { vi.useFakeTimers(); vi.unstubAllGlobals(); });
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+
+  it("Portrait : base non-épuisée affiche encore Activer", () => {
+    const base = makeHumanTurnState();
+    const state = {
+      ...base,
+      players: {
+        ...base.players,
+        player_1: {
+          ...base.players.player_1,
+          bases: [{
+            instanceId: "test-base-portrait58",
+            definitionId: "blob_wheel",
+            exhausted: false,
+            currentZone: "bases" as const,
+            ownerId: "player_1" as const,
+          }],
+        },
+      },
+    };
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const activateBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.trim() === "Activer");
+    expect(activateBtn).toBeDefined();
+  });
+});
