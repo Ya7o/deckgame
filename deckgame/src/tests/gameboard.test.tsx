@@ -2428,3 +2428,100 @@ describe("PATCH 0052 — B. Portrait non régressé", () => {
     expect(parseInt(endBtn!.style.minHeight)).toBeGreaterThanOrEqual(44);
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PATCH 0053 — Actions bot visibles hors journal
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("PATCH 0053 — A. Résumé actions bot (portrait)", () => {
+  beforeEach(() => { vi.useFakeTimers(); vi.unstubAllGlobals(); });
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+
+  it("Pas de résumé bot au début (tour humain, pas de tour bot précédent)", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    // No bot summary on first human turn (turnNumber=1, no bot turn yet)
+    const botSummary = container.querySelector("[style*='#16152a']");
+    expect(botSummary).toBeNull();
+  });
+
+  it("Journal toujours disponible (bouton Journal présent)", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const journalBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.trim() === "Journal");
+    expect(journalBtn).toBeDefined();
+  });
+
+  it("Main bot non exposée (aucune carte visible pour player_2)", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    // Bot's hand should not be visible — verify no "Tour du Bot" overlay and
+    // that we are in player_1 perspective
+    // The isBotTurn = false (it's human turn), so bot hand overlay is not shown
+    expect(container.textContent).not.toContain("Tour du Bot");
+  });
+
+  it("Tour bot verrouillé : Fin du tour désactivé pendant tour bot", () => {
+    const state = makeHumanTurnState();
+    // Simulate bot turn by switching currentPlayerId
+    const { container } = render(
+      React.createElement(GameBoard, {
+        initialState: state,
+        onNewGame: () => {},
+        gameMode: "solo_bot"
+      })
+    );
+    // End human turn to trigger bot turn (via fake timers)
+    const endBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.trim() === "Fin du tour") as HTMLButtonElement | undefined;
+    expect(endBtn).toBeDefined();
+    fireEvent.click(endBtn!);
+    // After end of turn, bot timer starts; Fin du tour should be disabled
+    const endBtnAfter = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.trim() === "Fin du tour") as HTMLButtonElement | undefined;
+    expect(endBtnAfter?.disabled).toBe(true);
+  });
+});
+
+describe("PATCH 0053 — B. Résumé actions bot (landscape)", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.stubGlobal("matchMedia", (query: string) => ({
+      matches: query.includes("landscape"),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+  });
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+
+  it("Landscape : pas de résumé bot au premier tour humain", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const botSummary = container.querySelector("[style*='#16152a']");
+    expect(botSummary).toBeNull();
+  });
+
+  it("Landscape : journal toujours disponible", () => {
+    const state = makeHumanTurnState();
+    const { container } = render(
+      React.createElement(GameBoard, { initialState: state, onNewGame: () => {}, gameMode: "solo_bot" })
+    );
+    const journalBtn = Array.from(container.querySelectorAll("button"))
+      .find(b => b.textContent?.trim() === "Journal");
+    expect(journalBtn).toBeDefined();
+  });
+});

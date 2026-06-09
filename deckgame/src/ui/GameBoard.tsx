@@ -82,6 +82,28 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
   const opponentOutposts = opponent.bases.filter(b => getCardDef(b.definitionId).isOutpost);
   const canAttackDirect = opponentOutposts.length === 0;
 
+  // Résumé du dernier tour bot (affiché pendant le tour humain suivant)
+  const lastBotActions: string[] = (() => {
+    if (gameMode !== "solo_bot") return [];
+    if (state.currentPlayerId !== "player_1") return [];
+    const botTurn = state.turnNumber - 1;
+    if (botTurn < 1) return [];
+    return state.log
+      .filter(e => e.playerId === "player_2" && e.turn === botTurn)
+      .map(e => e.message)
+      .filter(m => m !== "Fin du tour." && m !== "Pioche pour le prochain tour.");
+  })();
+
+  function formatBotAction(msg: string): string {
+    if (msg.startsWith("Joue ")) return `Bot joue ${msg.slice(5, -1)}`;
+    if (msg.startsWith("Achète ")) return `Bot achète ${msg.slice(7, -1)}`;
+    if (msg.startsWith("Attaque ")) return `Bot attaque ${msg.slice(8, -1)}`;
+    if (msg.startsWith("Détruit ")) return `Bot détruit ${msg.slice(8, -1)}`;
+    if (msg.startsWith("Active ")) return `Bot active ${msg.slice(7, -1)}`;
+    if (msg.startsWith("Écarte ")) return `Bot écarte ${msg.slice(7, -1)}`;
+    return msg;
+  }
+
   // ═══ LANDSCAPE LAYOUT ═══
   if (orientation === "landscape") {
     return (
@@ -147,6 +169,24 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
             );
           })}
         </div>
+
+        {/* LANDSCAPE — Bot last actions summary */}
+        {lastBotActions.length > 0 && (
+          <div style={{
+            padding: "3px 10px",
+            background: "#16152a",
+            borderBottom: "1px solid var(--accent)",
+            fontSize: "10px",
+            color: "var(--text-muted)",
+            flexShrink: 0,
+            overflow: "hidden",
+            whiteSpace: "nowrap",
+            textOverflow: "ellipsis",
+          }}>
+            <span style={{ color: "var(--accent)", fontWeight: "bold", marginRight: "6px" }}>✦</span>
+            {lastBotActions.map(formatBotAction).join(" · ")}
+          </div>
+        )}
 
         {/* LANDSCAPE — Trade row */}
         <div style={{
@@ -789,6 +829,24 @@ export function GameBoard({ initialState, onNewGame, gameMode }: Props) {
           )}
         </div>
       </div>
+
+      {/* PORTRAIT — Bot last actions summary */}
+      {lastBotActions.length > 0 && (
+        <div style={{
+          padding: "4px 10px",
+          background: "#16152a",
+          borderTop: "1px solid var(--accent)",
+          fontSize: "10px",
+          color: "var(--text-muted)",
+          flexShrink: 0,
+          overflow: "hidden",
+          whiteSpace: "nowrap",
+          textOverflow: "ellipsis",
+        }}>
+          <span style={{ color: "var(--accent)", fontWeight: "bold", marginRight: "6px" }}>✦</span>
+          {lastBotActions.map(formatBotAction).join(" · ")}
+        </div>
+      )}
 
       {/* GAME LOG */}
       {showLog && (
