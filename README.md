@@ -1,13 +1,25 @@
-# Deckgame — Star Realms V0.1
+# Deckgame — Star Realms V0.2 (en cours)
 
 Prototype jouable de Star Realms (set de base) en React + TypeScript.
 Support mobile/PWA, layout portrait et paysage, mode solo contre bot.
 
+## Expérience recommandée
+
+**Paysage plein écran sur mobile (PWA Android Chrome)**
+→ Toutes les informations visibles sans scroll, espace de jeu maximal.
+
+1. Ouvrir https://ya7o.github.io/deckgame/ dans Chrome sur Android
+2. Menu → **Ajouter à l'écran d'accueil** (installation PWA)
+3. Lancer depuis l'écran d'accueil, appuyer sur **Plein écran**
+4. Tourner le téléphone en **paysage**
+
+Le portrait est également supporté et fonctionnel.
+
 ## Jouer
 
 - **En ligne :** https://ya7o.github.io/deckgame/
-- **PWA :** Sur mobile, "Ajouter à l'écran d'accueil" depuis votre navigateur
-- **Plein écran :** Bouton disponible sur l'écran d'accueil (Chromium/Android)
+- **PWA :** "Ajouter à l'écran d'accueil" depuis Chrome Android
+- **Plein écran :** Bouton sur l'écran d'accueil (Chromium/Android)
 
 ## Stack technique
 
@@ -71,10 +83,22 @@ public/
 - Pile Explorateur initialisée à 16 instances (limite pratique V0)
 - Reshuffles déterministes si `rand` fourni à `setupGame`
 
-## Documentation utilisateur
+## Documentation
 
 - [Guide utilisateur V0.1](docs/user-guide-v0.1.md)
 - [Guide mobile & PWA](docs/mobile-pwa-guide.md)
+- [Direction produit V0.2](docs/product-direction-v0.2.md)
+- [Notes de version V0.1](docs/v0.1-release-notes.md)
+
+## Limitations connues V0.1 (en cours de correction pour V0.2)
+
+| Limitation | Priorité | Statut |
+|---|---|---|
+| Actions bot peu lisibles hors journal | P1 | PATCH 0053 |
+| Vocabulaire flou (Main, Pioche, Effet allié…) | P2 | PATCH 0054 |
+| Bases/avant-postes — activation peu claire | P2 | PATCH 0055 |
+| Icônes PWA PNG absentes | P3 | à planifier |
+| Accès modal carte non évident | P2 | à planifier |
 
 ## Historique des patchs
 
@@ -86,4 +110,6 @@ public/
 - PATCH 0047 : journal portrait close button + fullscreen style
 - PATCH 0048 : touch targets ≥ 44px, aria-labels
 - PATCH 0049 : documentation V0.1
-- PATCH 0050 : tag v0.1.0 (à venir)
+- PATCH 0050 : tag v0.1.0
+- PATCH 0051 : direction produit V0.2 (paysage plein écran = cible)
+- PATCH 0052–0057 : optimisations V0.2 (en cours)
