@@ -1,6 +1,7 @@
 # PATCH 0054 — Clarifier le vocabulaire de jeu et les microcopies
 
 **Date :** 2026-06-09
+**Commit :** d45350f
 **Branche :** master
 **Tests unitaires :** 292 / 292 GREEN
 **Playwright :** 5 / 5 GREEN
